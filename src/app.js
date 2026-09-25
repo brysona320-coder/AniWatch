@@ -3,15 +3,15 @@ import {
   ANIAPI_DEFAULT,
   ANIMEPARADISE_DEFAULT,
   PROVIDERS,
-} from "./providers.js";
-import { validBaseUrl } from "./api.js";
+} from "./providers.js?v=20260925-4";
+import { validBaseUrl } from "./api.js?v=20260925-4";
 import {
   CONSUMET_DEFAULT,
   STREAM_PROVIDERS,
   searchStreams,
   getStreamInfo,
   getEpisodeSources,
-} from "./streaming.js";
+} from "./streaming.js?v=20260925-4";
 
 const STORAGE = {
   favorites: "aniwatch:favorites",
@@ -143,6 +143,13 @@ const state = {
   streamRequestId: 0,
   videoSources: [],
 };
+if (state.catalogProvider === "aniapi" && state.aniapiUrl === ANIAPI_DEFAULT)
+  state.catalogProvider = "animeparadise";
+if (
+  state.streamProvider !== "animeparadise" &&
+  state.consumetUrl === CONSUMET_DEFAULT
+)
+  state.streamProvider = "animeparadise";
 let hlsPlayer = null;
 
 function streamBaseUrl() {
@@ -193,7 +200,10 @@ function nextStreamRequest() {
 function watchFailure(error, id) {
   if (id !== state.streamRequestId || error.name === "AbortError") return;
   elements.watchError.textContent =
-    error.message || "Could not load this stream.";
+    state.streamProvider !== "animeparadise" &&
+    state.consumetUrl === CONSUMET_DEFAULT
+      ? "The public Consumet API is unavailable. Choose AnimeParadise or enter a working Consumet URL in API settings."
+      : error.message || "Could not load this stream.";
   elements.watchDescription.textContent =
     "Check the API settings or choose another streaming source.";
 }
@@ -364,7 +374,7 @@ function playSource(source) {
         if (data.fatal)
           elements.watchError.textContent =
             data.details === "manifestIncompatibleCodecsError"
-              ? "This browser cannot decode the video codec. Try a browser with H.264 support or another source."
+              ? "The stream loaded, but this browser cannot decode its H.264 video. Try another browser or device, or open the title on AnimeParadise."
               : "The HLS stream could not play. Try another streaming source.";
       });
     } else {
@@ -416,7 +426,7 @@ function updateHeading() {
       ? `Explore matches from ${PROVIDERS[state.catalogProvider].label}.`
       : state.catalogProvider === "animeparadise"
         ? "Browse titles with episodes available to play."
-        : "Discover more titles from AniAPI.";
+        : `Discover more titles from ${PROVIDERS[state.catalogProvider].label}.`;
   elements.mode.textContent = state.watchlist
     ? "WATCHLIST"
     : state.query
@@ -429,7 +439,7 @@ function updateHeading() {
     : `POWERED BY ${PROVIDERS[state.catalogProvider].label.toUpperCase()}`;
   elements.hero.hidden = state.watchlist || Boolean(state.query);
   elements.filters.hidden =
-    state.watchlist || state.catalogProvider !== "aniapi";
+    state.watchlist || state.catalogProvider === "animeparadise";
   elements.catalogControl.hidden = state.watchlist;
   elements.count.textContent = state.items.length
     ? `${state.items.length} titles`
@@ -576,7 +586,9 @@ async function loadPage(reset = false) {
       baseUrl:
         state.catalogProvider === "animeparadise"
           ? state.animeparadiseUrl
-          : state.aniapiUrl,
+          : state.catalogProvider === "aniapi"
+            ? state.aniapiUrl
+            : undefined,
       query: state.query,
       type: state.type,
       page: nextPage,
@@ -594,7 +606,9 @@ async function loadPage(reset = false) {
       showMessage(
         "!",
         "Could not load anime",
-        error.message || "Please try again.",
+        state.catalogProvider === "aniapi" && state.aniapiUrl === ANIAPI_DEFAULT
+          ? "The public AniAPI URL is unavailable. Choose Watchable titles, AniList, or Kitsu, or enter a working AniAPI URL in API settings."
+          : error.message || "Please try again.",
         true,
       );
     else

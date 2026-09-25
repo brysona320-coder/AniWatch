@@ -17,7 +17,7 @@
     />
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./vendor/hls.min.js"></script>
-    <script type="module" src="./src/app.js"></script>
+    <script type="module" src="./src/app.js?v=20260925-4"></script>
   </head>
   <body>
     <header class="site-header">
@@ -160,6 +160,10 @@
           <label
             >Consumet base URL <input id="consumet-url" type="url" required
           /></label>
+          <p>
+            The public AniAPI and Consumet URLs are currently unavailable. Enter
+            a working instance URL to use those sources.
+          </p>
           <button type="submit">Save API URLs</button>
           <p id="settings-message" role="status"></p>
         </form>
@@ -192,6 +196,8 @@
           >Catalog
           <select id="catalog-select" aria-label="Anime catalog source">
             <option value="animeparadise">Watchable titles</option>
+            <option value="anilist">AniList</option>
+            <option value="kitsu">Kitsu</option>
             <option value="aniapi">AniAPI</option>
           </select>
         </label>

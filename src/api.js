@@ -20,14 +20,15 @@ export function safeHttpsUrl(value) {
   }
 }
 
-export async function fetchJson(baseUrl, path, signal) {
+export async function fetchJson(baseUrl, path, signal, requestOptions = {}) {
   const base = validBaseUrl(baseUrl);
   if (!base) throw new Error("Enter a valid HTTPS API URL in API settings.");
   let response;
   try {
     response = await fetch(`${base}${path}`, {
+      ...requestOptions,
       signal,
-      headers: { Accept: "application/json" },
+      headers: { Accept: "application/json", ...requestOptions.headers },
     });
   } catch (error) {
     if (error.name === "AbortError") throw error;

@@ -1,4 +1,4 @@
-import { fetchJson, safeHttpsUrl } from "./api.js";
+import { fetchJson, safeHttpsUrl } from "./api.js?v=20260925-4";
 
 export const CONSUMET_DEFAULT = "https://api.consumet.org";
 export const ANIMEPARADISE_DEFAULT = "https://api.animeparadise.moe";
@@ -12,6 +12,18 @@ export const STREAM_PROVIDERS = {
 function checkProvider(provider) {
   if (!(provider in STREAM_PROVIDERS))
     throw new Error("Unknown streaming source.");
+}
+
+function matchRank(title, query) {
+  const normalize = (value) =>
+    value
+      .toLocaleLowerCase()
+      .normalize("NFKD")
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .trim();
+  const name = normalize(title);
+  const search = normalize(query);
+  return name === search ? 0 : name.startsWith(`${search} `) ? 1 : 2;
 }
 
 export async function searchStreams({ baseUrl, provider, query, signal }) {
@@ -38,7 +50,8 @@ export async function searchStreams({ baseUrl, provider, query, signal }) {
           : "",
         releaseDate: item.animeSeason?.year || "",
         subOrDub: "sub",
-      }));
+      }))
+      .sort((a, b) => matchRank(a.title, query) - matchRank(b.title, query));
   }
   const data = await fetchJson(
     baseUrl || CONSUMET_DEFAULT,
