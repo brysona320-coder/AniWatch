@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./vendor/hls.min.js"></script>
     <script type="module" src="./src/app.js?v=20260925-6"></script>
+    <script type="module" src="./src/manga-app.js?v=20260925-2"></script>
   </head>
   <body>
     <header class="site-header">
@@ -117,147 +118,233 @@
     </header>
 
     <main>
-      <section class="hero" id="hero" aria-labelledby="hero-title">
-        <div class="hero-copy">
-          <span class="eyebrow"
-            ><span class="eyebrow-dot"></span> YOUR NEXT OBSESSION STARTS
-            HERE</span
-          >
-          <h1 id="hero-title">A whole world of <em>anime</em> awaits.</h1>
-          <p>
-            Browse anime you can watch here, explore AniAPI when it is
-            available, and keep your favorites close.
-          </p>
-          <a class="hero-link" href="#discover"
-            >Explore anime <span aria-hidden="true">↗</span></a
-          >
-        </div>
-        <div class="hero-art" aria-hidden="true">
-          <span class="orbit orbit-one"></span
-          ><span class="orbit orbit-two"></span
-          ><span class="art-star star-one">✦</span
-          ><span class="art-star star-two">✧</span>
-          <div class="art-card art-card-back"></div>
-          <div class="art-card art-card-front">
-            <span class="art-symbol">✦</span>
+      <nav class="content-tabs" aria-label="Explore anime or manga">
+        <button
+          id="anime-tab"
+          type="button"
+          class="content-tab active"
+          aria-current="page"
+        >
+          ▶ Anime
+        </button>
+        <button id="manga-tab" type="button" class="content-tab">
+          ▤ Manga
+        </button>
+      </nav>
+      <div id="anime-view">
+        <section class="hero" id="hero" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <span class="eyebrow"
+              ><span class="eyebrow-dot"></span> YOUR NEXT OBSESSION STARTS
+              HERE</span
+            >
+            <h1 id="hero-title">A whole world of <em>anime</em> awaits.</h1>
+            <p>
+              Browse anime you can watch here, explore AniAPI when it is
+              available, and keep your favorites close.
+            </p>
+            <a class="hero-link" href="#discover"
+              >Explore anime <span aria-hidden="true">↗</span></a
+            >
           </div>
-          <span class="art-caption">EVERY STORY STARTS SOMEWHERE</span>
-        </div>
-      </section>
+          <div class="hero-art" aria-hidden="true">
+            <span class="orbit orbit-one"></span
+            ><span class="orbit orbit-two"></span
+            ><span class="art-star star-one">✦</span
+            ><span class="art-star star-two">✧</span>
+            <div class="art-card art-card-back"></div>
+            <div class="art-card art-card-front">
+              <span class="art-symbol">✦</span>
+            </div>
+            <span class="art-caption">EVERY STORY STARTS SOMEWHERE</span>
+          </div>
+        </section>
 
-      <details class="api-settings" id="api-settings">
-        <summary>
-          API settings <span>Configure streaming and catalog URLs</span>
-        </summary>
-        <form id="api-settings-form">
-          <label
-            >AnimeParadise base URL
-            <input id="animeparadise-url" type="url" required
-          /></label>
-          <label
-            >AniAPI base URL <input id="aniapi-url" type="url" required
-          /></label>
-          <label
-            >Consumet base URL <input id="consumet-url" type="url" required
-          /></label>
-          <p>
-            The public AniAPI and Consumet URLs are currently unavailable. Enter
-            a working instance URL to use those sources.
-          </p>
-          <button type="submit">Save API URLs</button>
-          <button type="button" id="reset-api-urls">Reset API URLs</button>
-          <p id="settings-message" role="status"></p>
-        </form>
-      </details>
+        <details class="api-settings" id="api-settings">
+          <summary>
+            API settings <span>Configure streaming and catalog URLs</span>
+          </summary>
+          <form id="api-settings-form">
+            <label
+              >AnimeParadise base URL
+              <input id="animeparadise-url" type="url" required
+            /></label>
+            <label
+              >AniAPI base URL <input id="aniapi-url" type="url" required
+            /></label>
+            <label
+              >Consumet base URL <input id="consumet-url" type="url" required
+            /></label>
+            <p>
+              The public AniAPI and Consumet URLs are currently unavailable.
+              Enter a working instance URL to use those sources.
+            </p>
+            <button type="submit">Save API URLs</button>
+            <button type="button" id="reset-api-urls">Reset API URLs</button>
+            <p id="settings-message" role="status"></p>
+          </form>
+        </details>
 
-      <section class="catalog" id="discover" aria-labelledby="catalog-title">
-        <div class="section-topline">
-          <span class="section-kicker"
-            >DISCOVER / <span id="section-mode">TOP RATED</span></span
-          ><span class="source-label" id="source-label"
-            >POWERED BY ANIMEPARADISE</span
+        <section class="catalog" id="discover" aria-labelledby="catalog-title">
+          <div class="section-topline">
+            <span class="section-kicker"
+              >DISCOVER / <span id="section-mode">TOP RATED</span></span
+            ><span class="source-label" id="source-label"
+              >POWERED BY ANIMEPARADISE</span
+            >
+          </div>
+          <div class="section-heading">
+            <div>
+              <h2 id="catalog-title">
+                Watchable anime<span class="heading-period">.</span>
+              </h2>
+              <p id="catalog-subtitle">
+                Browse titles with episodes available to play.
+              </p>
+            </div>
+            <span
+              id="result-count"
+              class="result-count"
+              aria-live="polite"
+            ></span>
+          </div>
+          <label class="catalog-source-control" for="catalog-select"
+            >Catalog
+            <select id="catalog-select" aria-label="Anime catalog source">
+              <option value="animeparadise">Watchable titles</option>
+              <option value="anilist">AniList</option>
+              <option value="kitsu">Kitsu</option>
+              <option value="aniapi">AniAPI</option>
+            </select>
+          </label>
+          <div
+            class="filter-row"
+            id="filter-row"
+            role="group"
+            aria-label="Anime format filters"
           >
+            <button
+              type="button"
+              class="filter active"
+              data-type="all"
+              aria-pressed="true"
+            >
+              All formats</button
+            ><button
+              type="button"
+              class="filter"
+              data-type="tv"
+              aria-pressed="false"
+            >
+              TV Series</button
+            ><button
+              type="button"
+              class="filter"
+              data-type="movie"
+              aria-pressed="false"
+            >
+              Movies</button
+            ><button
+              type="button"
+              class="filter"
+              data-type="ova"
+              aria-pressed="false"
+            >
+              OVA</button
+            ><button
+              type="button"
+              class="filter"
+              data-type="ona"
+              aria-pressed="false"
+            >
+              ONA</button
+            ><button
+              type="button"
+              class="filter"
+              data-type="special"
+              aria-pressed="false"
+            >
+              Specials
+            </button>
+          </div>
+          <p
+            id="catalog-notice"
+            class="catalog-notice"
+            role="status"
+            hidden
+          ></p>
+          <div class="anime-grid" id="anime-grid" aria-live="polite"></div>
+          <div class="pagination">
+            <p id="page-error" class="page-error" role="status"></p>
+            <button type="button" id="load-more" class="load-more" hidden>
+              Load more <span aria-hidden="true">↓</span>
+            </button>
+          </div>
+        </section>
+      </div>
+      <section
+        id="manga-view"
+        class="catalog manga-catalog"
+        aria-labelledby="manga-title"
+        hidden
+      >
+        <div class="section-topline">
+          <span class="section-kicker">DISCOVER / READ</span
+          ><span class="source-label">POWERED BY MANGADEX</span>
         </div>
         <div class="section-heading">
           <div>
-            <h2 id="catalog-title">
-              Watchable anime<span class="heading-period">.</span>
+            <h2 id="manga-title">
+              Manga to read<span class="heading-period">.</span>
             </h2>
-            <p id="catalog-subtitle">
-              Browse titles with episodes available to play.
-            </p>
+            <p>Browse titles and read available chapters here.</p>
           </div>
-          <span
-            id="result-count"
-            class="result-count"
-            aria-live="polite"
-          ></span>
+          <span id="manga-count" class="result-count" aria-live="polite"></span>
         </div>
-        <label class="catalog-source-control" for="catalog-select"
-          >Catalog
-          <select id="catalog-select" aria-label="Anime catalog source">
-            <option value="animeparadise">Watchable titles</option>
-            <option value="anilist">AniList</option>
-            <option value="kitsu">Kitsu</option>
-            <option value="aniapi">AniAPI</option>
-          </select>
-        </label>
-        <div
-          class="filter-row"
-          id="filter-row"
-          role="group"
-          aria-label="Anime format filters"
-        >
+        <div class="manga-controls">
+          <form id="manga-search-form" class="manga-search" role="search">
+            <label for="manga-search">Search manga</label
+            ><input
+              id="manga-search"
+              type="search"
+              placeholder="Search for a manga..."
+              autocomplete="off"
+            /><button type="submit">Search</button>
+          </form>
           <button
+            id="manga-library-toggle"
+            class="load-more"
             type="button"
-            class="filter active"
-            data-type="all"
-            aria-pressed="true"
-          >
-            All formats</button
-          ><button
-            type="button"
-            class="filter"
-            data-type="tv"
             aria-pressed="false"
           >
-            TV Series</button
-          ><button
-            type="button"
-            class="filter"
-            data-type="movie"
-            aria-pressed="false"
-          >
-            Movies</button
-          ><button
-            type="button"
-            class="filter"
-            data-type="ova"
-            aria-pressed="false"
-          >
-            OVA</button
-          ><button
-            type="button"
-            class="filter"
-            data-type="ona"
-            aria-pressed="false"
-          >
-            ONA</button
-          ><button
-            type="button"
-            class="filter"
-            data-type="special"
-            aria-pressed="false"
-          >
-            Specials
+            ♡ Reading list <span id="manga-library-count">0</span>
           </button>
         </div>
-        <p id="catalog-notice" class="catalog-notice" role="status" hidden></p>
-        <div class="anime-grid" id="anime-grid" aria-live="polite"></div>
+        <p class="manga-note">
+          English chapters are shown when available. Some titles link to their
+          publisher for reading.
+        </p>
+        <details class="manga-api-settings">
+          <summary>Manga API settings</summary>
+          <form id="manga-api-form">
+            <label for="manga-api-url">MangaDex-compatible API URL</label
+            ><input id="manga-api-url" type="url" required /><button
+              type="submit"
+            >
+              Save URL
+            </button>
+            <p>
+              GitHub Pages needs an API endpoint that allows requests from this
+              site. The direct MangaDex API may block cross-origin requests.
+            </p>
+            <p id="manga-api-message" role="status"></p>
+          </form>
+        </details>
+        <div id="manga-grid" class="anime-grid" aria-live="polite"></div>
         <div class="pagination">
-          <p id="page-error" class="page-error" role="status"></p>
-          <button type="button" id="load-more" class="load-more" hidden>
-            Load more <span aria-hidden="true">↓</span>
+          <p id="manga-error" class="page-error" role="status"></p>
+          <button id="manga-more" type="button" class="load-more" hidden>
+            Load more manga <span aria-hidden="true">↓</span>
           </button>
         </div>
       </section>
@@ -268,10 +355,7 @@
         >Ani<span class="brand-accent">Watch</span>
         <span class="footer-separator">/</span> Made for the love of
         stories.</span
-      ><span
-        >Watchable titles from AnimeParadise · Optional AniAPI and Consumet
-        sources.</span
-      >
+      ><span>Anime from AnimeParadise · Manga and chapters from MangaDex.</span>
     </footer>
 
     <dialog
@@ -339,6 +423,82 @@
         <button id="more-episodes" class="load-more" type="button" hidden>
           Load more episodes
         </button>
+      </div>
+    </dialog>
+    <dialog
+      id="manga-dialog"
+      class="manga-dialog"
+      aria-labelledby="manga-dialog-title"
+    >
+      <button
+        id="manga-close"
+        class="dialog-close"
+        type="button"
+        aria-label="Close manga details"
+      >
+        ×
+      </button>
+      <div class="manga-detail-layout">
+        <img id="manga-cover" class="manga-detail-cover" alt="" />
+        <div class="manga-detail-copy">
+          <span class="section-kicker">MANGADEX · ENGLISH CHAPTERS</span>
+          <h2 id="manga-dialog-title"></h2>
+          <p id="manga-description"></p>
+          <div class="dialog-actions">
+            <button
+              id="manga-save"
+              class="dialog-favorite"
+              type="button"
+            ></button
+            ><a
+              id="manga-source"
+              class="dialog-source"
+              target="_blank"
+              rel="noopener noreferrer"
+              >View on MangaDex ↗</a
+            >
+          </div>
+          <h3>Chapters</h3>
+          <p id="manga-chapter-status" role="status"></p>
+          <div id="manga-chapters" class="manga-chapters"></div>
+          <button
+            id="manga-more-chapters"
+            type="button"
+            class="load-more"
+            hidden
+          >
+            Load more chapters
+          </button>
+        </div>
+      </div>
+    </dialog>
+    <dialog
+      id="manga-reader"
+      class="manga-reader"
+      aria-labelledby="manga-reader-title"
+    >
+      <div class="manga-reader-toolbar">
+        <button id="manga-reader-close" type="button" class="load-more">
+          ← Chapters
+        </button>
+        <div>
+          <strong id="manga-reader-title"></strong
+          ><span id="manga-reader-chapter"></span>
+        </div>
+        <label for="manga-quality"
+          >Images
+          <select id="manga-quality">
+            <option value="data-saver">Data saver</option>
+            <option value="data">Original</option>
+          </select></label
+        >
+      </div>
+      <p id="manga-reader-status" role="status"></p>
+      <div id="manga-pages" class="manga-pages"></div>
+      <div class="manga-reader-navigation">
+        <button id="manga-prev" class="load-more" type="button">
+          ← Previous</button
+        ><button id="manga-next" class="load-more" type="button">Next →</button>
       </div>
     </dialog>
 

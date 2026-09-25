@@ -1,6 +1,6 @@
 # AniWatch
 
-A static anime streaming frontend built for GitHub Pages. The default **Watchable titles** catalog comes from AnimeParadise, whose API supplies matching episodes and HLS video links for the on-page player. AniList and Kitsu provide additional working metadata catalogs. AniAPI remains an optional metadata catalog, and AnimeKai and Animepahe through Consumet remain optional streaming sources. Your watchlist and API settings are saved in this browser.
+A static anime streaming and manga reading frontend built for GitHub Pages. The default **Watchable titles** catalog comes from AnimeParadise, whose API supplies matching episodes and HLS video links for the on-page player. The **Manga** tab uses MangaDex for titles, English chapters, and in-page chapter images where MangaDex hosts them. Chapters hosted by publishers open on their publisher's site. AniList and Kitsu provide additional anime metadata catalogs. AniAPI remains an optional anime metadata catalog, and AnimeKai and Animepahe through Consumet remain optional streaming sources. Your anime watchlist, manga reading list, and API settings are saved in this browser.
 
 ## Run
 
@@ -30,3 +30,7 @@ node --test
 4. Open a title from **Watchable titles** and play an episode. The default AnimeParadise endpoint requires no API key. Optional AniAPI and Consumet choices need working browser-reachable HTTPS endpoints.
 
 The app uses relative asset paths for the `/AniWatch/` project URL. GitHub Pages serves only the frontend; the APIs and video segments are served by their external hosts.
+
+## Manga API on GitHub Pages
+
+MangaDex responds to server requests but currently omits `Access-Control-Allow-Origin` for `https://brysona320-coder.github.io`. Browsers therefore cannot call it directly from this Pages site. The **Manga API settings** field accepts a MangaDex-compatible HTTPS endpoint that allows this origin. The repository includes a small [Cloudflare Worker](worker/manga-proxy.js) for that purpose. Deploy the worker under your own Cloudflare account, then enter its public URL in Manga API settings. The worker only forwards the three MangaDex routes needed by the reader and only accepts this Pages origin and local development. GitHub Pages cannot run the worker itself. If Securly blocks MangaDex or the worker domain on your network, the browser will still be unable to load manga there; `import()` does not bypass network filtering or CORS.
