@@ -216,6 +216,26 @@ select:focus-visible {
   color: var(--accent);
   font-size: 11px;
 }
+.watch-now-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 13px;
+  border: 1px solid var(--accent);
+  border-radius: 9px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.watch-now-link:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+.watch-now-link span {
+  font-size: 11px;
+}
 main {
   max-width: 1440px;
   margin: auto;
@@ -384,6 +404,73 @@ main {
   color: #d0b8e5;
   font-size: 9px;
   letter-spacing: 2px;
+}
+.stream-section {
+  padding-bottom: 60px;
+}
+.stream-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px 18px;
+}
+.stream-card {
+  min-width: 0;
+}
+.stream-cover {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: white;
+}
+.stream-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+.stream-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #100d1e30;
+}
+.stream-cover:hover img,
+.stream-cover:focus-visible img {
+  transform: scale(1.04);
+}
+.stream-play {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid #ffffffb0;
+  border-radius: 50%;
+  background: #1a1530d9;
+  color: white;
+  font-size: 18px;
+  transform: translate(-50%, -50%);
+}
+.stream-card h3 {
+  margin: 11px 0 4px;
+  font:
+    700 15px/1.4 "Space Grotesk",
+    sans-serif;
+}
+.stream-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 .catalog {
   padding-bottom: 55px;
@@ -679,6 +766,66 @@ main {
   color: var(--line);
   margin: 0 8px;
 }
+.watch-dialog {
+  position: relative;
+  width: min(960px, calc(100% - 30px));
+  max-height: 90vh;
+  overflow: auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.watch-dialog::backdrop {
+  background: #080711dc;
+  backdrop-filter: blur(8px);
+}
+.watch-player {
+  background: #000;
+}
+.watch-player video {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+.watch-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 25px 30px 28px;
+}
+.watch-info .section-kicker {
+  color: var(--accent);
+}
+.watch-info h2 {
+  margin: 8px 0 5px;
+  font:
+    700 26px/1.2 "Space Grotesk",
+    sans-serif;
+}
+.watch-info p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.watch-info a {
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.watch-error:not(:empty) {
+  margin-top: 10px;
+  color: #f19ca8;
+}
 .anime-dialog {
   width: min(850px, calc(100% - 30px));
   max-height: min(88vh, 900px);
@@ -865,6 +1012,9 @@ main {
   .anime-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+  .stream-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .site-footer {
     margin: 0 25px;
   }
@@ -892,6 +1042,9 @@ main {
   .anime-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .stream-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 560px) {
   .header-inner {
@@ -908,6 +1061,16 @@ main {
   }
   .header-actions {
     gap: 6px;
+  }
+  .watch-now-link {
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    font-size: 0;
+  }
+  .watch-now-link span {
+    font-size: 13px;
   }
   .provider-control > span {
     display: none;
@@ -975,6 +1138,31 @@ main {
   .anime-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px 12px;
+  }
+  .stream-section {
+    padding-bottom: 45px;
+  }
+  .stream-grid {
+    gap: 18px 12px;
+  }
+  .stream-play {
+    width: 42px;
+    height: 42px;
+    font-size: 15px;
+  }
+  .stream-card h3 {
+    font-size: 13px;
+  }
+  .watch-info {
+    display: block;
+    padding: 20px;
+  }
+  .watch-info h2 {
+    font-size: 22px;
+  }
+  .watch-info a {
+    display: inline-block;
+    margin-top: 13px;
   }
   .site-footer {
     margin: 0 16px;

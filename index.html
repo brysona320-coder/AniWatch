@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#10111b" />
     <meta
       name="description"
-      content="Discover anime across Jikan, AniList, and Kitsu. Save a personal watchlist in your browser."
+      content="Watch public-domain anime classics and discover more titles across Jikan, AniList, and Kitsu."
     />
     <title>AniWatch — Find your next favorite</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -61,9 +61,18 @@
           <kbd class="search-hint">↵</kbd>
         </form>
         <div class="header-actions">
+          <a
+            class="watch-now-link"
+            href="#watch-now"
+            aria-label="Watch full anime films"
+            ><span aria-hidden="true">▶</span> Watch now</a
+          >
           <label class="provider-control" for="provider-select"
-            ><span>Source</span
-            ><select id="provider-select" aria-label="Anime data source">
+            ><span>Catalog</span
+            ><select
+              id="provider-select"
+              aria-label="Anime catalog data source"
+            >
               <option value="anilist">AniList</option>
               <option value="jikan">Jikan</option>
               <option value="kitsu">Kitsu</option></select
@@ -121,11 +130,11 @@
           >
           <h1 id="hero-title">A whole world of <em>anime</em> awaits.</h1>
           <p>
-            Find something worth watching. Explore the charts, search across
-            three anime catalogs, and keep your favorites close.
+            Press play on free anime classics, explore three anime catalogs, and
+            keep your favorites close.
           </p>
-          <a class="hero-link" href="#discover"
-            >Explore anime <span aria-hidden="true">↗</span></a
+          <a class="hero-link" href="#watch-now"
+            >Start watching <span aria-hidden="true">↗</span></a
           >
         </div>
         <div class="hero-art" aria-hidden="true">
@@ -141,6 +150,27 @@
         </div>
       </section>
 
+      <section
+        class="stream-section"
+        id="watch-now"
+        aria-labelledby="stream-title"
+      >
+        <div class="section-topline">
+          <span class="section-kicker">WATCH / FULL FILMS</span>
+          <span class="source-label">PUBLIC DOMAIN · WIKIMEDIA COMMONS</span>
+        </div>
+        <div class="section-heading">
+          <div>
+            <h2 id="stream-title">
+              Watch anime here<span class="heading-period">.</span>
+            </h2>
+            <p>Early Japanese animation you can play right on this site.</p>
+          </div>
+          <span class="result-count">8 films</span>
+        </div>
+        <div class="stream-grid" id="stream-grid"></div>
+      </section>
+
       <section class="catalog" id="discover" aria-labelledby="catalog-title">
         <div class="section-topline">
           <span class="section-kicker"
@@ -154,7 +184,9 @@
             <h2 id="catalog-title">
               Top rated anime<span class="heading-period">.</span>
             </h2>
-            <p id="catalog-subtitle">Stories worth making time for.</p>
+            <p id="catalog-subtitle">
+              Discover more titles from anime catalogs.
+            </p>
           </div>
           <span
             id="result-count"
@@ -226,8 +258,40 @@
         >Ani<span class="brand-accent">Watch</span>
         <span class="footer-separator">/</span> Made for the love of
         stories.</span
-      ><span>Anime information from Jikan, AniList &amp; Kitsu.</span>
+      ><span
+        >Films from Wikimedia Commons · Catalog data from Jikan, AniList &amp;
+        Kitsu.</span
+      >
     </footer>
+
+    <dialog
+      id="watch-dialog"
+      class="watch-dialog"
+      aria-labelledby="watch-title"
+    >
+      <button
+        type="button"
+        class="dialog-close"
+        id="watch-close"
+        aria-label="Close player"
+      >
+        ×
+      </button>
+      <div class="watch-player">
+        <video id="watch-video" controls playsinline preload="none"></video>
+      </div>
+      <div class="watch-info">
+        <div>
+          <span class="section-kicker">FULL FILM · PUBLIC DOMAIN</span>
+          <h2 id="watch-title"></h2>
+          <p id="watch-description"></p>
+          <p id="watch-error" class="watch-error" role="alert"></p>
+        </div>
+        <a id="watch-source" target="_blank" rel="noopener noreferrer"
+          >View file and rights on Wikimedia Commons ↗</a
+        >
+      </div>
+    </dialog>
 
     <dialog
       id="anime-dialog"
