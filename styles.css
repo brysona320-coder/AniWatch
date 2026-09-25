@@ -1,0 +1,1013 @@
+:root {
+  color-scheme: dark;
+  --bg: #10111b;
+  --surface: #191b28;
+  --surface-2: #222435;
+  --text: #f7f5fb;
+  --muted: #a4a2b5;
+  --line: #333448;
+  --accent: #bb9cff;
+  --accent-dark: #8b5ceb;
+  --shadow: 0 20px 65px #05050c70;
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f7f5fb;
+  --surface: #fff;
+  --surface-2: #f1edfa;
+  --text: #242034;
+  --muted: #6d697d;
+  --line: #e6e0ee;
+  --accent: #7543d1;
+  --accent-dark: #6833c7;
+  --shadow: 0 20px 65px #34244d22;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "DM Sans", Arial, sans-serif;
+  min-width: 320px;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+svg {
+  width: 20px;
+  height: 20px;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  backdrop-filter: blur(18px);
+}
+.header-inner {
+  max-width: 1440px;
+  margin: auto;
+  min-height: 78px;
+  padding: 14px 46px;
+  display: flex;
+  align-items: center;
+  gap: 38px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font:
+    700 23px "Space Grotesk",
+    sans-serif;
+  letter-spacing: -1.3px;
+  white-space: nowrap;
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  color: var(--accent);
+}
+.brand-mark svg {
+  width: 35px;
+  height: 35px;
+}
+.brand-accent {
+  color: var(--accent);
+}
+.search {
+  position: relative;
+  max-width: 490px;
+  flex: 1;
+}
+.search svg {
+  position: absolute;
+  left: 17px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  width: 19px;
+}
+.search input {
+  width: 100%;
+  height: 44px;
+  padding: 0 48px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  color: var(--text);
+  outline: none;
+}
+.search input:focus {
+  border-color: var(--accent);
+}
+.search input::placeholder {
+  color: var(--muted);
+}
+.search-hint {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 6px;
+  font:
+    16px "Space Grotesk",
+    sans-serif;
+}
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.provider-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  white-space: nowrap;
+}
+.provider-control select {
+  appearance: none;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px 31px 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+}
+.provider-control svg {
+  width: 12px;
+  margin-left: -30px;
+  pointer-events: none;
+  color: var(--muted);
+}
+.icon-button,
+.watchlist-button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  height: 40px;
+  border-radius: 9px;
+}
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+}
+.watchlist-button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.watchlist-button svg {
+  width: 18px;
+  height: 18px;
+}
+.watchlist-button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.watchlist-count {
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 2px 6px;
+  color: var(--accent);
+  font-size: 11px;
+}
+main {
+  max-width: 1440px;
+  margin: auto;
+  padding: 0 46px;
+}
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  min-height: 405px;
+  margin: 28px 0 58px;
+  padding: 57px 7%;
+  border: 1px solid #5b437d;
+  border-radius: 20px;
+  background:
+    radial-gradient(
+      circle at 76% 48%,
+      #63398390 0,
+      #39264c70 30%,
+      transparent 58%
+    ),
+    linear-gradient(110deg, #202136, #23203d 60%, #332443);
+  isolation: isolate;
+}
+.hero:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#e6ceff25 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(90deg, transparent 30%, black);
+  pointer-events: none;
+}
+.hero-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 585px;
+}
+.eyebrow,
+.section-kicker,
+.source-label {
+  font-size: 11px;
+  letter-spacing: 2.3px;
+  font-weight: 700;
+}
+.eyebrow {
+  color: #d8baff;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d8baff;
+  box-shadow: 0 0 12px #d8baff;
+}
+.hero h1 {
+  font:
+    700 clamp(40px, 5vw, 69px) / 1.06 "Space Grotesk",
+    sans-serif;
+  letter-spacing: -3.6px;
+  margin: 22px 0 16px;
+  color: #fff;
+}
+.hero h1 em {
+  font-style: normal;
+  color: #c4a6ff;
+}
+.hero p {
+  max-width: 500px;
+  color: #c4bfd1;
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0;
+}
+.hero-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 34px;
+  margin-top: 27px;
+  padding: 13px 18px;
+  background: #c4a6ff;
+  color: #191326;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.hero-link:hover {
+  background: #e1d1ff;
+}
+.hero-link span {
+  font-size: 18px;
+  line-height: 1;
+}
+.hero-art {
+  position: absolute;
+  right: 4%;
+  top: 0;
+  bottom: 0;
+  width: 42%;
+  display: grid;
+  place-items: center;
+}
+.orbit {
+  position: absolute;
+  border: 1px solid #d9c3ff50;
+  border-radius: 50%;
+  transform: rotate(-22deg);
+}
+.orbit-one {
+  width: 490px;
+  height: 190px;
+}
+.orbit-two {
+  width: 365px;
+  height: 310px;
+  transform: rotate(26deg);
+  border-color: #d9c3ff2c;
+}
+.art-card {
+  position: absolute;
+  width: 187px;
+  height: 255px;
+  border-radius: 15px;
+  border: 1px solid #e7d9ff80;
+  box-shadow: 0 20px 45px #10091f80;
+}
+.art-card-back {
+  transform: translate(65px, 8px) rotate(19deg);
+  background: linear-gradient(145deg, #8754bc, #452f71);
+}
+.art-card-front {
+  display: grid;
+  place-items: center;
+  transform: translate(-18px, -2px) rotate(-12deg);
+  background: linear-gradient(145deg, #bc87d9, #704fae 60%, #49346d);
+}
+.art-symbol {
+  font:
+    700 94px "Space Grotesk",
+    sans-serif;
+  color: #ffffffb8;
+  text-shadow: 0 10px 30px #362152;
+}
+.art-star {
+  position: absolute;
+  color: #e6d5ff;
+}
+.star-one {
+  font-size: 40px;
+  top: 49px;
+  right: 13%;
+}
+.star-two {
+  font-size: 29px;
+  bottom: 54px;
+  left: 3%;
+}
+.art-caption {
+  position: absolute;
+  bottom: 28px;
+  right: 17px;
+  color: #d0b8e5;
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+.catalog {
+  padding-bottom: 55px;
+}
+.section-topline {
+  display: flex;
+  justify-content: space-between;
+  color: var(--accent);
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.source-label {
+  color: var(--muted);
+  letter-spacing: 1.3px;
+}
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin: 22px 0 30px;
+}
+.section-heading h2 {
+  font:
+    700 clamp(28px, 3vw, 39px) / 1.2 "Space Grotesk",
+    sans-serif;
+  letter-spacing: -1.7px;
+  margin: 0 0 6px;
+}
+.heading-period {
+  color: var(--accent);
+}
+.section-heading p {
+  color: var(--muted);
+  margin: 0;
+  font-size: 14px;
+}
+.result-count {
+  font-size: 12px;
+  color: var(--muted);
+}
+.filter-row {
+  display: flex;
+  gap: 9px;
+  overflow: auto;
+  padding: 1px 1px 22px;
+  scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar {
+  display: none;
+}
+.filter {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.filter:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.filter.active {
+  background: var(--accent);
+  color: #1c1230;
+  border-color: var(--accent);
+}
+.anime-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 29px 19px;
+  min-height: 180px;
+}
+.anime-card {
+  min-width: 0;
+}
+.card-cover {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3/4.15;
+  background: var(--surface-2);
+  border: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 0;
+  box-shadow: 0 7px 20px #05040a30;
+  text-align: left;
+  color: var(--text);
+}
+.card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+.anime-card:hover .card-cover img,
+.card-cover:focus-visible img {
+  transform: scale(1.05);
+}
+.card-cover:after {
+  content: "";
+  position: absolute;
+  inset: 45% 0 0;
+  background: linear-gradient(transparent, #08050a9c);
+  pointer-events: none;
+}
+.card-rank {
+  position: absolute;
+  left: 11px;
+  bottom: 10px;
+  z-index: 1;
+  font:
+    700 31px "Space Grotesk",
+    sans-serif;
+  color: #fff;
+  line-height: 1;
+}
+.card-score {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  z-index: 1;
+  background: #14111cdb;
+  color: #fff;
+  padding: 5px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.card-score span {
+  color: #ffcf69;
+}
+.card-favorite {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  left: 10px;
+  display: grid;
+  place-items: center;
+  background: #14111cdb;
+  border: 0;
+  border-radius: 7px;
+  color: #fff;
+  width: 31px;
+  height: 31px;
+  font-size: 19px;
+  line-height: 1;
+}
+.card-favorite[aria-pressed="true"] {
+  color: #ff8bab;
+}
+.card-details {
+  padding: 12px 2px;
+}
+.card-title {
+  display: block;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text);
+  text-align: left;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.45;
+  min-height: 2.9em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.card-title:hover {
+  color: var(--accent);
+}
+.card-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 7px;
+}
+.card-meta .dot {
+  color: var(--accent);
+}
+.pagination {
+  text-align: center;
+  padding-top: 20px;
+}
+.load-more {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 12px 27px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.load-more:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.load-more span {
+  margin-left: 15px;
+}
+.empty-state {
+  grid-column: 1/-1;
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 58px 20px;
+  color: var(--muted);
+}
+.empty-state .empty-icon {
+  display: block;
+  color: var(--accent);
+  font-size: 35px;
+  margin-bottom: 12px;
+}
+.empty-state h3 {
+  color: var(--text);
+  font:
+    700 20px "Space Grotesk",
+    sans-serif;
+  margin: 0 0 8px;
+}
+.empty-state p {
+  margin: 0 auto;
+  max-width: 420px;
+  line-height: 1.6;
+}
+.empty-state button {
+  margin-top: 18px;
+  background: var(--accent);
+  color: #20152f;
+  border: 0;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+.skeleton-cover,
+.skeleton-line {
+  background: linear-gradient(
+    90deg,
+    var(--surface) 20%,
+    var(--surface-2) 50%,
+    var(--surface) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skeleton-cover {
+  aspect-ratio: 3/4.15;
+  border-radius: 12px;
+}
+.skeleton-line {
+  height: 13px;
+  margin-top: 13px;
+  border-radius: 4px;
+}
+.skeleton-line.short {
+  width: 55%;
+  height: 10px;
+  margin-top: 8px;
+}
+@keyframes shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}
+.site-footer {
+  border-top: 1px solid var(--line);
+  max-width: 1348px;
+  margin: auto;
+  padding: 24px 0 35px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.site-footer > span:first-child {
+  font:
+    700 14px "Space Grotesk",
+    sans-serif;
+  color: var(--text);
+}
+.footer-separator {
+  color: var(--line);
+  margin: 0 8px;
+}
+.anime-dialog {
+  width: min(850px, calc(100% - 30px));
+  max-height: min(88vh, 900px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  overflow: auto;
+}
+.anime-dialog::backdrop {
+  background: #080711c9;
+  backdrop-filter: blur(8px);
+}
+.dialog-close {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  z-index: 2;
+  width: 35px;
+  height: 35px;
+  border: 1px solid #ffffff42;
+  border-radius: 8px;
+  background: #1d1929dc;
+  color: #fff;
+  font-size: 25px;
+  line-height: 1;
+}
+.dialog-layout {
+  display: grid;
+  grid-template-columns: 36% 64%;
+  min-height: 480px;
+}
+.dialog-poster {
+  position: relative;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.dialog-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.dialog-poster-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 70%, #18172365);
+}
+.dialog-info {
+  padding: 45px 35px 32px;
+  min-width: 0;
+}
+.dialog-info .section-kicker {
+  color: var(--accent);
+}
+.dialog-info h2 {
+  font:
+    700 clamp(27px, 4vw, 39px) / 1.15 "Space Grotesk",
+    sans-serif;
+  letter-spacing: -1.5px;
+  margin: 14px 36px 17px 0;
+}
+.dialog-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.dialog-meta span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.dialog-description {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.75;
+  max-height: 170px;
+  overflow: auto;
+  margin: 23px 0;
+}
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.dialog-favorite,
+.dialog-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.dialog-favorite {
+  border: 0;
+  background: var(--accent);
+  color: #1b1230;
+}
+.dialog-source {
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+.dialog-source:hover {
+  border-color: var(--accent);
+}
+.dialog-trailer {
+  margin-top: 23px;
+}
+.dialog-trailer a {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.filter-row[hidden],
+.hero[hidden],
+.load-more[hidden] {
+  display: none;
+}
+.card-cover.cover-placeholder {
+  display: grid;
+  place-items: center;
+  font:
+    700 80px "Space Grotesk",
+    sans-serif;
+  color: var(--accent);
+  background: linear-gradient(145deg, #66478c, #252036);
+}
+.anime-card {
+  position: relative;
+}
+.anime-card > .card-favorite {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+.trailer-play {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.trailer-play:hover {
+  border-color: var(--accent);
+}
+.dialog-trailer iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: 0;
+  border-radius: 8px;
+}
+.page-error {
+  color: #e6a5af;
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+.page-error:empty {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .header-inner {
+    gap: 18px;
+    padding: 12px 25px;
+  }
+  .header-actions {
+    gap: 8px;
+  }
+  main {
+    padding: 0 25px;
+  }
+  .anime-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .site-footer {
+    margin: 0 25px;
+  }
+}
+@media (max-width: 790px) {
+  .header-inner {
+    flex-wrap: wrap;
+  }
+  .search {
+    order: 3;
+    max-width: none;
+    flex-basis: 100%;
+  }
+  .header-actions {
+    margin-left: auto;
+  }
+  .hero-art {
+    opacity: 0.35;
+    right: -15%;
+    width: 75%;
+  }
+  .hero-copy {
+    max-width: 600px;
+  }
+  .anime-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .header-inner {
+    padding: 11px 16px;
+    gap: 10px;
+  }
+  .brand {
+    font-size: 20px;
+  }
+  .brand-mark,
+  .brand-mark svg {
+    width: 30px;
+    height: 30px;
+  }
+  .header-actions {
+    gap: 6px;
+  }
+  .provider-control > span {
+    display: none;
+  }
+  .provider-control select {
+    max-width: 87px;
+    padding: 8px 20px 8px 7px;
+  }
+  .provider-control svg {
+    margin-left: -23px;
+  }
+  .watchlist-button {
+    padding: 0 8px;
+  }
+  .watchlist-button > span:not(.watchlist-count) {
+    display: none;
+  }
+  .watchlist-button svg {
+    width: 17px;
+  }
+  .icon-button,
+  .watchlist-button {
+    height: 36px;
+  }
+  .icon-button {
+    width: 36px;
+  }
+  .search input {
+    height: 40px;
+  }
+  main {
+    padding: 0 16px;
+  }
+  .hero {
+    margin: 18px 0 39px;
+    padding: 37px 24px;
+    min-height: 360px;
+  }
+  .hero h1 {
+    font-size: 44px;
+    letter-spacing: -2.5px;
+  }
+  .hero p {
+    font-size: 13px;
+  }
+  .hero-art {
+    right: -55%;
+    opacity: 0.2;
+  }
+  .section-topline {
+    gap: 8px;
+  }
+  .source-label {
+    text-align: right;
+  }
+  .section-heading {
+    align-items: start;
+  }
+  .section-heading h2 {
+    font-size: 29px;
+  }
+  .result-count {
+    margin-top: 8px;
+  }
+  .anime-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 12px;
+  }
+  .site-footer {
+    margin: 0 16px;
+    flex-direction: column;
+  }
+  .dialog-layout {
+    display: block;
+  }
+  .dialog-poster {
+    height: 240px;
+  }
+  .dialog-poster img {
+    object-position: center 25%;
+  }
+  .dialog-info {
+    padding: 24px;
+  }
+  .dialog-info h2 {
+    margin-right: 0;
+  }
+  .dialog-close {
+    right: 9px;
+    top: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *:before,
+  *:after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
