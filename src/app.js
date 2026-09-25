@@ -1,9 +1,18 @@
-import { fetchAnime, PROVIDERS } from "./providers.js";
-import { STREAMS } from "./streams.js";
+import { fetchAnime, ANIAPI_DEFAULT, PROVIDERS } from "./providers.js";
+import { validBaseUrl } from "./api.js";
+import {
+  CONSUMET_DEFAULT,
+  STREAM_PROVIDERS,
+  searchStreams,
+  getStreamInfo,
+  getEpisodeSources,
+} from "./streaming.js";
 
 const STORAGE = {
   favorites: "aniwatch:favorites",
-  provider: "aniwatch:provider",
+  streamProvider: "aniwatch:stream-provider",
+  aniapiUrl: "aniwatch:aniapi-url",
+  consumetUrl: "aniwatch:consumet-url",
   theme: "aniwatch:theme",
 };
 const $ = (selector) => document.querySelector(selector);
@@ -33,16 +42,27 @@ const elements = {
   dialogMeta: $("#dialog-meta"),
   dialogDescription: $("#dialog-description"),
   dialogFavorite: $("#dialog-favorite"),
+  dialogWatch: $("#dialog-watch"),
   dialogSource: $("#dialog-source"),
   dialogTrailer: $("#dialog-trailer"),
-  streamGrid: $("#stream-grid"),
+  settings: $("#api-settings"),
+  settingsForm: $("#api-settings-form"),
+  aniapiUrl: $("#aniapi-url"),
+  consumetUrl: $("#consumet-url"),
+  settingsMessage: $("#settings-message"),
   watchDialog: $("#watch-dialog"),
   watchClose: $("#watch-close"),
+  watchPlayer: $(".watch-player"),
   watchVideo: $("#watch-video"),
   watchTitle: $("#watch-title"),
   watchDescription: $("#watch-description"),
   watchError: $("#watch-error"),
-  watchSource: $("#watch-source"),
+  streamSearchForm: $("#stream-search-form"),
+  streamSearchInput: $("#stream-search-input"),
+  streamMatches: $("#stream-matches"),
+  streamEpisodes: $("#stream-episodes"),
+  moreEpisodes: $("#more-episodes"),
+  quality: $("#quality-select"),
 };
 
 function readStorage(key, fallback) {
@@ -74,9 +94,15 @@ const favorites = new Map(
         .map((item) => [item.key, item])
     : [],
 );
-const savedProvider = readStorage(STORAGE.provider, "anilist");
+const savedProvider = readStorage(STORAGE.streamProvider, "animekai");
 const state = {
-  provider: PROVIDERS[savedProvider] ? savedProvider : "anilist",
+  streamProvider: STREAM_PROVIDERS[savedProvider] ? savedProvider : "animekai",
+  aniapiUrl:
+    validBaseUrl(readStorage(STORAGE.aniapiUrl, ANIAPI_DEFAULT)) ||
+    ANIAPI_DEFAULT,
+  consumetUrl:
+    validBaseUrl(readStorage(STORAGE.consumetUrl, CONSUMET_DEFAULT)) ||
+    CONSUMET_DEFAULT,
   query: "",
   type: "all",
   watchlist: false,
@@ -87,7 +113,16 @@ const state = {
   requestId: 0,
   busy: false,
   selected: null,
+  watchAnime: null,
+  streamTitle: "",
+  streamId: "",
+  episodePage: 0,
+  episodes: [],
+  streamController: null,
+  streamRequestId: 0,
+  videoSources: [],
 };
+let hlsPlayer = null;
 
 function plainText(html) {
   return (
@@ -108,55 +143,208 @@ function setTheme(theme) {
       : '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
   writeStorage(STORAGE.theme, theme);
 }
-function renderStreams() {
-  const fragment = document.createDocumentFragment();
-  for (const film of STREAMS) {
-    const card = document.createElement("article");
-    card.className = "stream-card";
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "stream-cover";
-    button.setAttribute("aria-label", `Watch ${film.title}`);
-    const poster = document.createElement("img");
-    poster.src = film.poster;
-    poster.alt = "";
-    poster.loading = "lazy";
-    const play = document.createElement("span");
-    play.className = "stream-play";
-    play.textContent = "▶";
-    play.setAttribute("aria-hidden", "true");
-    button.append(poster, play);
-    button.addEventListener("click", () => openStream(film));
-    const title = document.createElement("h3");
-    title.textContent = film.title;
-    const meta = document.createElement("p");
-    meta.textContent = `${film.year} · Full film`;
-    card.append(button, title, meta);
-    fragment.append(card);
-  }
-  elements.streamGrid.replaceChildren(fragment);
-}
-function openStream(film) {
-  elements.watchTitle.textContent = film.title;
-  elements.watchDescription.textContent = film.description;
-  elements.watchSource.href = film.sourceUrl;
-  elements.watchError.textContent = "";
-  elements.watchVideo.poster = film.poster;
-  elements.watchVideo.src = film.videoUrl;
-  elements.watchDialog.showModal();
-  elements.watchVideo.play().catch(() => {
-    // Native controls remain available if autoplay is blocked.
-  });
-}
 function clearStream() {
+  hlsPlayer?.destroy();
+  hlsPlayer = null;
   elements.watchVideo.pause();
   elements.watchVideo.removeAttribute("src");
-  elements.watchVideo.removeAttribute("poster");
   elements.watchVideo.load();
+  elements.watchPlayer.hidden = true;
+  elements.quality.replaceChildren(new Option("Choose an episode", ""));
+  elements.quality.disabled = true;
   elements.watchError.textContent = "";
 }
 function closeStream() {
   elements.watchDialog.close();
+}
+
+function nextStreamRequest() {
+  state.streamController?.abort();
+  state.streamController = new AbortController();
+  return { signal: state.streamController.signal, id: ++state.streamRequestId };
+}
+function watchFailure(error, id) {
+  if (id !== state.streamRequestId || error.name === "AbortError") return;
+  elements.watchError.textContent =
+    error.message || "Could not load this stream.";
+  elements.watchDescription.textContent =
+    "Check the API settings or choose another streaming source.";
+}
+function openWatch(anime) {
+  closeDetails();
+  state.watchAnime = anime;
+  state.streamId = "";
+  state.episodes = [];
+  elements.watchTitle.textContent = anime.title;
+  elements.streamSearchInput.value = anime.title;
+  elements.watchDialog.showModal();
+  searchWatch();
+}
+async function searchWatch() {
+  if (!state.watchAnime) return;
+  const request = nextStreamRequest();
+  clearStream();
+  state.streamId = "";
+  state.episodes = [];
+  state.episodePage = 0;
+  elements.streamMatches.replaceChildren();
+  elements.streamEpisodes.replaceChildren();
+  elements.moreEpisodes.hidden = true;
+  elements.watchDescription.textContent = `Searching ${STREAM_PROVIDERS[state.streamProvider]} for matching titles…`;
+  try {
+    const matches = await searchStreams({
+      baseUrl: state.consumetUrl,
+      provider: state.streamProvider,
+      query: elements.streamSearchInput.value.trim() || state.watchAnime.title,
+      signal: request.signal,
+    });
+    if (request.id !== state.streamRequestId) return;
+    elements.watchDescription.textContent = matches.length
+      ? "Choose the matching series to see its episodes."
+      : "No matching series found. Try the other streaming source.";
+    for (const match of matches) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "stream-match";
+      button.dataset.streamId = match.id;
+      button.textContent = `${match.title}${match.releaseDate ? ` · ${match.releaseDate}` : ""}${match.subOrDub ? ` · ${match.subOrDub}` : ""}`;
+      button.addEventListener("click", () => selectStream(match));
+      elements.streamMatches.append(button);
+    }
+  } catch (error) {
+    watchFailure(error, request.id);
+  }
+}
+async function selectStream(match) {
+  const request = nextStreamRequest();
+  clearStream();
+  state.streamId = match.id;
+  state.streamTitle = match.title;
+  state.episodes = [];
+  state.episodePage = 0;
+  elements.streamEpisodes.replaceChildren();
+  elements.moreEpisodes.hidden = true;
+  elements.streamMatches.querySelectorAll("button").forEach((button) => {
+    button.classList.toggle("active", button.dataset.streamId === match.id);
+  });
+  elements.watchDescription.textContent = `Loading episodes for ${match.title}…`;
+  await loadEpisodes(request);
+}
+async function loadEpisodes(existingRequest) {
+  if (!state.streamId) return;
+  const request = existingRequest || nextStreamRequest();
+  const nextPage = state.episodePage + 1;
+  elements.moreEpisodes.disabled = true;
+  try {
+    const info = await getStreamInfo({
+      baseUrl: state.consumetUrl,
+      provider: state.streamProvider,
+      id: state.streamId,
+      episodePage: nextPage,
+      signal: request.signal,
+    });
+    if (request.id !== state.streamRequestId) return;
+    const known = new Set(state.episodes.map((episode) => episode.id));
+    const additional = info.episodes.filter(
+      (episode) => !known.has(episode.id),
+    );
+    state.episodes.push(...additional);
+    state.episodePage = nextPage;
+    elements.watchDescription.textContent = state.episodes.length
+      ? `Choose an episode of ${state.streamTitle}.`
+      : "No episodes are available for this title.";
+    for (const episode of additional) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "episode-button";
+      button.textContent = `Episode ${episode.number}${episode.title ? ` · ${episode.title}` : ""}`;
+      button.addEventListener("click", () => selectEpisode(episode, button));
+      elements.streamEpisodes.append(button);
+    }
+    elements.moreEpisodes.hidden =
+      state.streamProvider !== "animepahe" ||
+      !additional.length ||
+      state.episodes.length >= info.totalEpisodes;
+  } catch (error) {
+    watchFailure(error, request.id);
+  } finally {
+    if (request.id === state.streamRequestId)
+      elements.moreEpisodes.disabled = false;
+  }
+}
+async function selectEpisode(episode, button) {
+  const request = nextStreamRequest();
+  clearStream();
+  elements.watchDescription.textContent = `Loading episode ${episode.number}…`;
+  try {
+    const result = await getEpisodeSources({
+      baseUrl: state.consumetUrl,
+      provider: state.streamProvider,
+      episodeId: episode.id,
+      signal: request.signal,
+    });
+    if (request.id !== state.streamRequestId) return;
+    if (!result.sources.length)
+      throw new Error("No browser-playable video sources were returned.");
+    state.videoSources = result.sources;
+    elements.streamEpisodes
+      .querySelectorAll("button")
+      .forEach((item) => item.classList.toggle("active", item === button));
+    elements.quality.replaceChildren(
+      ...result.sources.map(
+        (source, index) => new Option(source.quality, String(index)),
+      ),
+    );
+    elements.quality.disabled = false;
+    elements.watchDescription.textContent = `${state.streamTitle} · Episode ${episode.number}`;
+    if (result.needsHeaders)
+      elements.watchError.textContent =
+        "This source may require request headers that a browser cannot send. If playback fails, try another source.";
+    playSource(result.sources[0]);
+  } catch (error) {
+    watchFailure(error, request.id);
+  }
+}
+function playSource(source) {
+  clearVideoOnly();
+  elements.watchPlayer.hidden = false;
+  const video = elements.watchVideo;
+  if (source.hls) {
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = source.url;
+    } else if (window.Hls?.isSupported()) {
+      hlsPlayer = new window.Hls();
+      hlsPlayer.loadSource(source.url);
+      hlsPlayer.attachMedia(video);
+      hlsPlayer.on(window.Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {
+          // Native controls remain available when autoplay is blocked.
+        });
+      });
+      hlsPlayer.on(window.Hls.Events.ERROR, (_, data) => {
+        if (data.fatal)
+          elements.watchError.textContent =
+            "The HLS stream could not play. Check browser codec support or try another source.";
+      });
+    } else {
+      elements.watchError.textContent =
+        "HLS playback is unavailable in this browser.";
+      return;
+    }
+  } else {
+    video.src = source.url;
+  }
+  if (!hlsPlayer)
+    video.play().catch(() => {
+      // Native controls remain available when autoplay is blocked.
+    });
+}
+function clearVideoOnly() {
+  hlsPlayer?.destroy();
+  hlsPlayer = null;
+  elements.watchVideo.pause();
+  elements.watchVideo.removeAttribute("src");
+  elements.watchVideo.load();
 }
 function updateWatchlistControls() {
   elements.watchlist.setAttribute("aria-pressed", String(state.watchlist));
@@ -182,8 +370,8 @@ function updateHeading() {
   elements.subtitle.textContent = state.watchlist
     ? "The stories you saved, all in one place."
     : state.query
-      ? "Explore matches from your selected source."
-      : "Discover more titles from anime catalogs.";
+      ? "Explore matches from AniAPI."
+      : "Discover more titles from AniAPI.";
   elements.mode.textContent = state.watchlist
     ? "WATCHLIST"
     : state.query
@@ -191,7 +379,7 @@ function updateHeading() {
       : "TOP RATED";
   elements.source.textContent = state.watchlist
     ? "SAVED IN THIS BROWSER"
-    : `POWERED BY ${PROVIDERS[state.provider].label.toUpperCase()}`;
+    : "POWERED BY ANIAPI";
   elements.hero.hidden = state.watchlist || Boolean(state.query);
   elements.filters.hidden = state.watchlist;
   elements.count.textContent = state.items.length
@@ -335,7 +523,7 @@ async function loadPage(reset = false) {
   updateHeading();
   try {
     const result = await fetchAnime({
-      provider: state.provider,
+      baseUrl: state.aniapiUrl,
       query: state.query,
       type: state.type,
       page: nextPage,
@@ -454,9 +642,28 @@ elements.search.addEventListener("input", () => {
   }, 500);
 });
 elements.provider.addEventListener("change", () => {
-  state.provider = elements.provider.value;
-  writeStorage(STORAGE.provider, state.provider);
-  startCatalog();
+  state.streamProvider = elements.provider.value;
+  writeStorage(STORAGE.streamProvider, state.streamProvider);
+  if (elements.watchDialog.open) searchWatch();
+});
+elements.settingsForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const aniapiUrl = validBaseUrl(elements.aniapiUrl.value.trim());
+  const consumetUrl = validBaseUrl(elements.consumetUrl.value.trim());
+  if (!aniapiUrl || !consumetUrl) {
+    elements.settingsMessage.textContent =
+      "Use HTTPS URLs, or local HTTP URLs during development.";
+    return;
+  }
+  const catalogChanged = state.aniapiUrl !== aniapiUrl;
+  const streamChanged = state.consumetUrl !== consumetUrl;
+  state.aniapiUrl = aniapiUrl;
+  state.consumetUrl = consumetUrl;
+  writeStorage(STORAGE.aniapiUrl, aniapiUrl);
+  writeStorage(STORAGE.consumetUrl, consumetUrl);
+  elements.settingsMessage.textContent = "API URLs saved in this browser.";
+  if (catalogChanged) startCatalog();
+  if (streamChanged && elements.watchDialog.open) searchWatch();
 });
 elements.theme.addEventListener("click", () =>
   setTheme(
@@ -502,23 +709,41 @@ elements.dialog.addEventListener("close", () => {
 elements.dialogFavorite.addEventListener("click", () => {
   if (state.selected) toggleFavorite(state.selected);
 });
+elements.dialogWatch.addEventListener("click", () => {
+  if (state.selected) openWatch(state.selected);
+});
 elements.watchClose.addEventListener("click", closeStream);
 elements.watchDialog.addEventListener("click", (event) => {
   if (event.target === elements.watchDialog) closeStream();
 });
-elements.watchDialog.addEventListener("close", clearStream);
+elements.watchDialog.addEventListener("close", () => {
+  state.streamController?.abort();
+  state.streamRequestId++;
+  state.watchAnime = null;
+  clearStream();
+});
+elements.moreEpisodes.addEventListener("click", () => loadEpisodes());
+elements.streamSearchForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (elements.streamSearchInput.value.trim()) searchWatch();
+});
+elements.quality.addEventListener("change", () => {
+  const source = state.videoSources[Number(elements.quality.value)];
+  if (source) playSource(source);
+});
 elements.watchVideo.addEventListener("error", () => {
   if (elements.watchVideo.currentSrc) {
     elements.watchError.textContent =
-      "This video could not play in your browser. Try the file on Wikimedia Commons.";
+      "This video could not play in your browser. The host may block direct playback or need a proxy.";
   }
 });
 elements.watchVideo.addEventListener("playing", () => {
   elements.watchError.textContent = "";
 });
 
-elements.provider.value = state.provider;
+elements.provider.value = state.streamProvider;
+elements.aniapiUrl.value = state.aniapiUrl;
+elements.consumetUrl.value = state.consumetUrl;
 setTheme(readStorage(STORAGE.theme, "dark") === "light" ? "light" : "dark");
 updateWatchlistControls();
-renderStreams();
 startCatalog();
