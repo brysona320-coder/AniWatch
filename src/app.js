@@ -1,4 +1,9 @@
-import { fetchAnime, ANIAPI_DEFAULT, PROVIDERS } from "./providers.js";
+import {
+  fetchAnime,
+  ANIAPI_DEFAULT,
+  ANIMEPARADISE_DEFAULT,
+  PROVIDERS,
+} from "./providers.js";
 import { validBaseUrl } from "./api.js";
 import {
   CONSUMET_DEFAULT,
@@ -10,9 +15,11 @@ import {
 
 const STORAGE = {
   favorites: "aniwatch:favorites",
-  streamProvider: "aniwatch:stream-provider",
+  streamProvider: "aniwatch:stream-provider-v2",
+  catalogProvider: "aniwatch:catalog-provider",
   aniapiUrl: "aniwatch:aniapi-url",
   consumetUrl: "aniwatch:consumet-url",
+  animeparadiseUrl: "aniwatch:animeparadise-url",
   theme: "aniwatch:theme",
 };
 const $ = (selector) => document.querySelector(selector);
@@ -21,6 +28,9 @@ const elements = {
   searchForm: $("#search-form"),
   search: $("#search-input"),
   provider: $("#provider-select"),
+  watchProvider: $("#watch-provider-select"),
+  catalogProvider: $("#catalog-select"),
+  catalogControl: $(".catalog-source-control"),
   theme: $("#theme-toggle"),
   watchlist: $("#watchlist-toggle"),
   watchlistCount: $("#watchlist-count"),
@@ -49,6 +59,7 @@ const elements = {
   settingsForm: $("#api-settings-form"),
   aniapiUrl: $("#aniapi-url"),
   consumetUrl: $("#consumet-url"),
+  animeparadiseUrl: $("#animeparadise-url"),
   settingsMessage: $("#settings-message"),
   watchDialog: $("#watch-dialog"),
   watchClose: $("#watch-close"),
@@ -57,6 +68,8 @@ const elements = {
   watchTitle: $("#watch-title"),
   watchDescription: $("#watch-description"),
   watchError: $("#watch-error"),
+  watchExternal: $("#watch-external"),
+  watchProviderLabel: $("#watch-provider-label"),
   streamSearchForm: $("#stream-search-form"),
   streamSearchInput: $("#stream-search-input"),
   streamMatches: $("#stream-matches"),
@@ -94,15 +107,23 @@ const favorites = new Map(
         .map((item) => [item.key, item])
     : [],
 );
-const savedProvider = readStorage(STORAGE.streamProvider, "animekai");
+const savedProvider = readStorage(STORAGE.streamProvider, "animeparadise");
+const savedCatalog = readStorage(STORAGE.catalogProvider, "animeparadise");
 const state = {
-  streamProvider: STREAM_PROVIDERS[savedProvider] ? savedProvider : "animekai",
+  streamProvider: STREAM_PROVIDERS[savedProvider]
+    ? savedProvider
+    : "animeparadise",
+  catalogProvider: PROVIDERS[savedCatalog] ? savedCatalog : "animeparadise",
   aniapiUrl:
     validBaseUrl(readStorage(STORAGE.aniapiUrl, ANIAPI_DEFAULT)) ||
     ANIAPI_DEFAULT,
   consumetUrl:
     validBaseUrl(readStorage(STORAGE.consumetUrl, CONSUMET_DEFAULT)) ||
     CONSUMET_DEFAULT,
+  animeparadiseUrl:
+    validBaseUrl(
+      readStorage(STORAGE.animeparadiseUrl, ANIMEPARADISE_DEFAULT),
+    ) || ANIMEPARADISE_DEFAULT,
   query: "",
   type: "all",
   watchlist: false,
@@ -123,6 +144,12 @@ const state = {
   videoSources: [],
 };
 let hlsPlayer = null;
+
+function streamBaseUrl() {
+  return state.streamProvider === "animeparadise"
+    ? state.animeparadiseUrl
+    : state.consumetUrl;
+}
 
 function plainText(html) {
   return (
@@ -177,8 +204,16 @@ function openWatch(anime) {
   state.episodes = [];
   elements.watchTitle.textContent = anime.title;
   elements.streamSearchInput.value = anime.title;
+  elements.watchProvider.value = state.streamProvider;
+  elements.watchProviderLabel.textContent = `EPISODES · ${STREAM_PROVIDERS[state.streamProvider].toUpperCase()}`;
   elements.watchDialog.showModal();
-  searchWatch();
+  elements.streamMatches.replaceChildren();
+  if (
+    anime.provider === "animeparadise" &&
+    state.streamProvider === "animeparadise"
+  )
+    selectStream({ id: anime.id, title: anime.title, url: anime.url });
+  else searchWatch();
 }
 async function searchWatch() {
   if (!state.watchAnime) return;
@@ -189,11 +224,12 @@ async function searchWatch() {
   state.episodePage = 0;
   elements.streamMatches.replaceChildren();
   elements.streamEpisodes.replaceChildren();
+  elements.watchExternal.hidden = true;
   elements.moreEpisodes.hidden = true;
   elements.watchDescription.textContent = `Searching ${STREAM_PROVIDERS[state.streamProvider]} for matching titles…`;
   try {
     const matches = await searchStreams({
-      baseUrl: state.consumetUrl,
+      baseUrl: streamBaseUrl(),
       provider: state.streamProvider,
       query: elements.streamSearchInput.value.trim() || state.watchAnime.title,
       signal: request.signal,
@@ -220,6 +256,9 @@ async function selectStream(match) {
   clearStream();
   state.streamId = match.id;
   state.streamTitle = match.title;
+  elements.watchExternal.hidden =
+    state.streamProvider !== "animeparadise" || !match.url;
+  if (!elements.watchExternal.hidden) elements.watchExternal.href = match.url;
   state.episodes = [];
   state.episodePage = 0;
   elements.streamEpisodes.replaceChildren();
@@ -237,7 +276,7 @@ async function loadEpisodes(existingRequest) {
   elements.moreEpisodes.disabled = true;
   try {
     const info = await getStreamInfo({
-      baseUrl: state.consumetUrl,
+      baseUrl: streamBaseUrl(),
       provider: state.streamProvider,
       id: state.streamId,
       episodePage: nextPage,
@@ -278,7 +317,7 @@ async function selectEpisode(episode, button) {
   elements.watchDescription.textContent = `Loading episode ${episode.number}…`;
   try {
     const result = await getEpisodeSources({
-      baseUrl: state.consumetUrl,
+      baseUrl: streamBaseUrl(),
       provider: state.streamProvider,
       episodeId: episode.id,
       signal: request.signal,
@@ -324,7 +363,9 @@ function playSource(source) {
       hlsPlayer.on(window.Hls.Events.ERROR, (_, data) => {
         if (data.fatal)
           elements.watchError.textContent =
-            "The HLS stream could not play. Check browser codec support or try another source.";
+            data.details === "manifestIncompatibleCodecsError"
+              ? "This browser cannot decode the video codec. Try a browser with H.264 support or another source."
+              : "The HLS stream could not play. Try another streaming source.";
       });
     } else {
       elements.watchError.textContent =
@@ -359,7 +400,9 @@ function updateHeading() {
     ? "Your watchlist"
     : state.query
       ? `Results for “${state.query}”`
-      : "Top rated anime";
+      : state.catalogProvider === "animeparadise"
+        ? "Watchable anime"
+        : "Top rated anime";
   elements.heading.replaceChildren(
     document.createTextNode(title),
     Object.assign(document.createElement("span"), {
@@ -370,18 +413,24 @@ function updateHeading() {
   elements.subtitle.textContent = state.watchlist
     ? "The stories you saved, all in one place."
     : state.query
-      ? "Explore matches from AniAPI."
-      : "Discover more titles from AniAPI.";
+      ? `Explore matches from ${PROVIDERS[state.catalogProvider].label}.`
+      : state.catalogProvider === "animeparadise"
+        ? "Browse titles with episodes available to play."
+        : "Discover more titles from AniAPI.";
   elements.mode.textContent = state.watchlist
     ? "WATCHLIST"
     : state.query
       ? "SEARCH"
-      : "TOP RATED";
+      : state.catalogProvider === "animeparadise"
+        ? "WATCHABLE"
+        : "TOP RATED";
   elements.source.textContent = state.watchlist
     ? "SAVED IN THIS BROWSER"
-    : "POWERED BY ANIAPI";
+    : `POWERED BY ${PROVIDERS[state.catalogProvider].label.toUpperCase()}`;
   elements.hero.hidden = state.watchlist || Boolean(state.query);
-  elements.filters.hidden = state.watchlist;
+  elements.filters.hidden =
+    state.watchlist || state.catalogProvider !== "aniapi";
+  elements.catalogControl.hidden = state.watchlist;
   elements.count.textContent = state.items.length
     ? `${state.items.length} titles`
     : "";
@@ -523,7 +572,11 @@ async function loadPage(reset = false) {
   updateHeading();
   try {
     const result = await fetchAnime({
-      baseUrl: state.aniapiUrl,
+      provider: state.catalogProvider,
+      baseUrl:
+        state.catalogProvider === "animeparadise"
+          ? state.animeparadiseUrl
+          : state.aniapiUrl,
       query: state.query,
       type: state.type,
       page: nextPage,
@@ -601,6 +654,11 @@ function openDetails(anime) {
     }
   }
   elements.dialogSource.href = anime.url;
+  elements.dialogWatch.textContent =
+    anime.provider === "animeparadise" &&
+    state.streamProvider === "animeparadise"
+      ? "▶ Watch episodes"
+      : "▶ Find episodes";
   elements.dialogTrailer.replaceChildren();
   if (anime.trailerId) {
     const play = document.createElement("button");
@@ -641,26 +699,68 @@ elements.search.addEventListener("input", () => {
     startCatalog();
   }, 500);
 });
-elements.provider.addEventListener("change", () => {
-  state.streamProvider = elements.provider.value;
+function setStreamProvider(provider) {
+  state.streamProvider = provider;
+  elements.provider.value = provider;
+  elements.watchProvider.value = provider;
   writeStorage(STORAGE.streamProvider, state.streamProvider);
-  if (elements.watchDialog.open) searchWatch();
+  if (elements.watchDialog.open) {
+    elements.watchProviderLabel.textContent = `EPISODES · ${STREAM_PROVIDERS[state.streamProvider].toUpperCase()}`;
+    if (
+      state.watchAnime?.provider === "animeparadise" &&
+      state.streamProvider === "animeparadise"
+    ) {
+      elements.streamMatches.replaceChildren();
+      selectStream({
+        id: state.watchAnime.id,
+        title: state.watchAnime.title,
+        url: state.watchAnime.url,
+      });
+    } else searchWatch();
+  }
+}
+elements.provider.addEventListener("change", () =>
+  setStreamProvider(elements.provider.value),
+);
+elements.watchProvider.addEventListener("change", () =>
+  setStreamProvider(elements.watchProvider.value),
+);
+elements.catalogProvider.addEventListener("change", () => {
+  state.catalogProvider = elements.catalogProvider.value;
+  state.type = "all";
+  elements.filters.querySelectorAll("button").forEach((button) => {
+    const active = button.dataset.type === "all";
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  writeStorage(STORAGE.catalogProvider, state.catalogProvider);
+  startCatalog();
 });
 elements.settingsForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const aniapiUrl = validBaseUrl(elements.aniapiUrl.value.trim());
   const consumetUrl = validBaseUrl(elements.consumetUrl.value.trim());
-  if (!aniapiUrl || !consumetUrl) {
+  const animeparadiseUrl = validBaseUrl(elements.animeparadiseUrl.value.trim());
+  if (!aniapiUrl || !consumetUrl || !animeparadiseUrl) {
     elements.settingsMessage.textContent =
       "Use HTTPS URLs, or local HTTP URLs during development.";
     return;
   }
-  const catalogChanged = state.aniapiUrl !== aniapiUrl;
-  const streamChanged = state.consumetUrl !== consumetUrl;
+  const catalogChanged =
+    (state.catalogProvider === "aniapi" && state.aniapiUrl !== aniapiUrl) ||
+    (state.catalogProvider === "animeparadise" &&
+      state.animeparadiseUrl !== animeparadiseUrl);
+  const streamChanged =
+    (state.streamProvider === "animeparadise" &&
+      state.animeparadiseUrl !== animeparadiseUrl) ||
+    (state.streamProvider !== "animeparadise" &&
+      state.consumetUrl !== consumetUrl);
   state.aniapiUrl = aniapiUrl;
   state.consumetUrl = consumetUrl;
+  state.animeparadiseUrl = animeparadiseUrl;
   writeStorage(STORAGE.aniapiUrl, aniapiUrl);
   writeStorage(STORAGE.consumetUrl, consumetUrl);
+  writeStorage(STORAGE.animeparadiseUrl, animeparadiseUrl);
   elements.settingsMessage.textContent = "API URLs saved in this browser.";
   if (catalogChanged) startCatalog();
   if (streamChanged && elements.watchDialog.open) searchWatch();
@@ -742,8 +842,10 @@ elements.watchVideo.addEventListener("playing", () => {
 });
 
 elements.provider.value = state.streamProvider;
+elements.catalogProvider.value = state.catalogProvider;
 elements.aniapiUrl.value = state.aniapiUrl;
 elements.consumetUrl.value = state.consumetUrl;
+elements.animeparadiseUrl.value = state.animeparadiseUrl;
 setTheme(readStorage(STORAGE.theme, "dark") === "light" ? "light" : "dark");
 updateWatchlistControls();
 startCatalog();

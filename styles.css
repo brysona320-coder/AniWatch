@@ -474,6 +474,26 @@ main {
 .catalog {
   padding-bottom: 55px;
 }
+.catalog-source-control {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: max-content;
+  margin: -13px 0 20px auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+.catalog-source-control[hidden] {
+  display: none;
+}
+.catalog-source-control select,
+.watch-provider-control select {
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+}
 .section-topline {
   display: flex;
   justify-content: space-between;
@@ -821,10 +841,29 @@ main {
   font-size: 13px;
   line-height: 1.5;
 }
+.watch-external {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--accent);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.watch-external[hidden] {
+  display: none;
+}
 .source-quality {
   display: grid;
   gap: 7px;
   max-width: 200px;
+  margin: 18px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.watch-provider-control {
+  display: grid;
+  gap: 7px;
+  max-width: 240px;
   margin: 18px 0;
   color: var(--muted);
   font-size: 12px;
@@ -1128,7 +1167,7 @@ main {
     display: none;
   }
   .provider-control select {
-    max-width: 87px;
+    max-width: 110px;
     padding: 8px 20px 8px 7px;
   }
   .provider-control svg {

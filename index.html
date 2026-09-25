@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#10111b" />
     <meta
       name="description"
-      content="Explore anime with AniAPI and watch episodes from a configured Consumet service."
+      content="Browse anime episodes and watch them on AniWatch."
     />
     <title>AniWatch — Find your next favorite</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
-    <script defer src="./vendor/hls.light.min.js"></script>
+    <script defer src="./vendor/hls.min.js"></script>
     <script type="module" src="./src/app.js"></script>
   </head>
   <body>
@@ -68,6 +68,7 @@
           <label class="provider-control" for="provider-select"
             ><span>Stream</span
             ><select id="provider-select" aria-label="Streaming API provider">
+              <option value="animeparadise">AnimeParadise</option>
               <option value="animekai">AnimeKai</option>
               <option value="animepahe">Animepahe</option></select
             ><svg aria-hidden="true" viewBox="0 0 12 12" fill="none">
@@ -124,8 +125,8 @@
           >
           <h1 id="hero-title">A whole world of <em>anime</em> awaits.</h1>
           <p>
-            Discover anime with AniAPI, find episodes through your selected
-            streaming source, and keep your favorites close.
+            Browse anime you can watch here, explore AniAPI when it is
+            available, and keep your favorites close.
           </p>
           <a class="hero-link" href="#discover"
             >Explore anime <span aria-hidden="true">↗</span></a
@@ -146,9 +147,13 @@
 
       <details class="api-settings" id="api-settings">
         <summary>
-          API settings <span>Configure AniAPI and Consumet URLs</span>
+          API settings <span>Configure streaming and catalog URLs</span>
         </summary>
         <form id="api-settings-form">
+          <label
+            >AnimeParadise base URL
+            <input id="animeparadise-url" type="url" required
+          /></label>
           <label
             >AniAPI base URL <input id="aniapi-url" type="url" required
           /></label>
@@ -164,14 +169,18 @@
         <div class="section-topline">
           <span class="section-kicker"
             >DISCOVER / <span id="section-mode">TOP RATED</span></span
-          ><span class="source-label" id="source-label">POWERED BY ANIAPI</span>
+          ><span class="source-label" id="source-label"
+            >POWERED BY ANIMEPARADISE</span
+          >
         </div>
         <div class="section-heading">
           <div>
             <h2 id="catalog-title">
-              Top rated anime<span class="heading-period">.</span>
+              Watchable anime<span class="heading-period">.</span>
             </h2>
-            <p id="catalog-subtitle">Discover more titles from AniAPI.</p>
+            <p id="catalog-subtitle">
+              Browse titles with episodes available to play.
+            </p>
           </div>
           <span
             id="result-count"
@@ -179,6 +188,13 @@
             aria-live="polite"
           ></span>
         </div>
+        <label class="catalog-source-control" for="catalog-select"
+          >Catalog
+          <select id="catalog-select" aria-label="Anime catalog source">
+            <option value="animeparadise">Watchable titles</option>
+            <option value="aniapi">AniAPI</option>
+          </select>
+        </label>
         <div
           class="filter-row"
           id="filter-row"
@@ -244,7 +260,10 @@
         >Ani<span class="brand-accent">Watch</span>
         <span class="footer-separator">/</span> Made for the love of
         stories.</span
-      ><span>Anime data from AniAPI · Episode links from Consumet.</span>
+      ><span
+        >Watchable titles from AnimeParadise · Optional AniAPI and Consumet
+        sources.</span
+      >
     </footer>
 
     <dialog
@@ -264,10 +283,28 @@
         <video id="watch-video" controls playsinline preload="none"></video>
       </div>
       <div class="watch-info">
-        <span class="section-kicker">EPISODES · CONSUMET</span>
+        <span class="section-kicker" id="watch-provider-label"
+          >EPISODES · ANIMEPARADISE</span
+        >
         <h2 id="watch-title"></h2>
         <p id="watch-description"></p>
         <p id="watch-error" class="watch-error" role="alert"></p>
+        <a
+          id="watch-external"
+          class="watch-external"
+          target="_blank"
+          rel="noopener noreferrer"
+          hidden
+          >Open title on AnimeParadise ↗</a
+        >
+        <label class="watch-provider-control" for="watch-provider-select"
+          >Streaming source
+          <select id="watch-provider-select">
+            <option value="animeparadise">AnimeParadise</option>
+            <option value="animekai">AnimeKai</option>
+            <option value="animepahe">Animepahe</option>
+          </select>
+        </label>
         <form id="stream-search-form" class="stream-search" role="search">
           <label for="stream-search-input">Find a different title</label>
           <input id="stream-search-input" type="search" required />
