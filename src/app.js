@@ -3,15 +3,15 @@ import {
   ANIAPI_DEFAULT,
   ANIMEPARADISE_DEFAULT,
   PROVIDERS,
-} from "./providers.js?v=20260925-4";
-import { validBaseUrl } from "./api.js?v=20260925-4";
+} from "./providers.js?v=20260925-6";
+import { validBaseUrl } from "./api.js?v=20260925-6";
 import {
   CONSUMET_DEFAULT,
   STREAM_PROVIDERS,
   searchStreams,
   getStreamInfo,
   getEpisodeSources,
-} from "./streaming.js?v=20260925-4";
+} from "./streaming.js?v=20260925-6";
 
 const STORAGE = {
   favorites: "aniwatch:favorites",
@@ -44,6 +44,7 @@ const elements = {
   mode: $("#section-mode"),
   source: $("#source-label"),
   count: $("#result-count"),
+  catalogNotice: $("#catalog-notice"),
   dialog: $("#anime-dialog"),
   dialogClose: $("#dialog-close"),
   dialogImage: $("#dialog-image"),
@@ -57,6 +58,7 @@ const elements = {
   dialogTrailer: $("#dialog-trailer"),
   settings: $("#api-settings"),
   settingsForm: $("#api-settings-form"),
+  resetUrls: $("#reset-api-urls"),
   aniapiUrl: $("#aniapi-url"),
   consumetUrl: $("#consumet-url"),
   animeparadiseUrl: $("#animeparadise-url"),
@@ -577,24 +579,78 @@ async function loadPage(reset = false) {
   if (reset) {
     state.items = [];
     state.hasMore = false;
+    elements.catalogNotice.hidden = true;
+    elements.catalogNotice.textContent = "";
     showSkeletons();
   }
   updateHeading();
   try {
-    const result = await fetchAnime({
-      provider: state.catalogProvider,
-      baseUrl:
-        state.catalogProvider === "animeparadise"
-          ? state.animeparadiseUrl
-          : state.catalogProvider === "aniapi"
-            ? state.aniapiUrl
-            : undefined,
-      query: state.query,
-      type: state.type,
-      page: nextPage,
-      signal: controller.signal,
-    });
+    const fetchPage = (provider, baseUrl) =>
+      fetchAnime({
+        provider,
+        baseUrl:
+          provider === "animeparadise"
+            ? baseUrl || state.animeparadiseUrl
+            : provider === "aniapi"
+              ? state.aniapiUrl
+              : undefined,
+        query: state.query,
+        type: state.type,
+        page: nextPage,
+        signal: controller.signal,
+      });
+    let result;
+    let fallback = "";
+    let fallbackProvider = state.catalogProvider;
+    let resetSavedUrl = false;
+    try {
+      result = await fetchPage(state.catalogProvider);
+    } catch (error) {
+      if (
+        error.name === "AbortError" ||
+        !reset ||
+        state.catalogProvider !== "animeparadise"
+      )
+        throw error;
+      if (state.animeparadiseUrl !== ANIMEPARADISE_DEFAULT) {
+        try {
+          result = await fetchPage("animeparadise", ANIMEPARADISE_DEFAULT);
+          resetSavedUrl = true;
+          fallback =
+            "Your saved AnimeParadise URL could not be reached, so the default URL was restored.";
+        } catch (retryError) {
+          if (retryError.name === "AbortError") throw retryError;
+        }
+      }
+      if (!result) {
+        for (const provider of ["anilist", "kitsu"]) {
+          try {
+            result = await fetchPage(provider);
+            fallback = `AnimeParadise could not be reached from this browser. Showing ${PROVIDERS[provider].label} titles; episode playback may still be unavailable.`;
+            fallbackProvider = provider;
+            break;
+          } catch (retryError) {
+            if (retryError.name === "AbortError") throw retryError;
+          }
+        }
+      }
+      if (!result)
+        throw new Error(
+          "AnimeParadise, AniList, and Kitsu could not be reached from this browser. Check your connection or reset API URLs.",
+        );
+    }
     if (requestId !== state.requestId) return;
+    state.catalogProvider = fallbackProvider;
+    if (resetSavedUrl) {
+      state.animeparadiseUrl = ANIMEPARADISE_DEFAULT;
+      elements.animeparadiseUrl.value = ANIMEPARADISE_DEFAULT;
+      writeStorage(STORAGE.animeparadiseUrl, ANIMEPARADISE_DEFAULT);
+    }
+    if (fallback) {
+      elements.catalogProvider.value = state.catalogProvider;
+      elements.catalogNotice.textContent = fallback;
+      elements.catalogNotice.hidden = false;
+    }
     state.page = nextPage;
     state.hasMore = result.hasMore;
     const keys = new Set(state.items.map((item) => item.key));
@@ -630,6 +686,7 @@ function showWatchlist() {
   state.requestId++;
   state.busy = false;
   elements.pageError.textContent = "";
+  elements.catalogNotice.hidden = true;
   state.watchlist = true;
   state.hasMore = false;
   state.items = [...favorites.values()];
@@ -748,6 +805,23 @@ elements.catalogProvider.addEventListener("change", () => {
     button.setAttribute("aria-pressed", String(active));
   });
   writeStorage(STORAGE.catalogProvider, state.catalogProvider);
+  startCatalog();
+});
+elements.resetUrls.addEventListener("click", () => {
+  state.aniapiUrl = ANIAPI_DEFAULT;
+  state.consumetUrl = CONSUMET_DEFAULT;
+  state.animeparadiseUrl = ANIMEPARADISE_DEFAULT;
+  elements.aniapiUrl.value = ANIAPI_DEFAULT;
+  elements.consumetUrl.value = CONSUMET_DEFAULT;
+  elements.animeparadiseUrl.value = ANIMEPARADISE_DEFAULT;
+  writeStorage(STORAGE.aniapiUrl, ANIAPI_DEFAULT);
+  writeStorage(STORAGE.consumetUrl, CONSUMET_DEFAULT);
+  writeStorage(STORAGE.animeparadiseUrl, ANIMEPARADISE_DEFAULT);
+  state.catalogProvider = "animeparadise";
+  elements.catalogProvider.value = "animeparadise";
+  writeStorage(STORAGE.catalogProvider, "animeparadise");
+  setStreamProvider("animeparadise");
+  elements.settingsMessage.textContent = "API URLs reset to defaults.";
   startCatalog();
 });
 elements.settingsForm.addEventListener("submit", (event) => {

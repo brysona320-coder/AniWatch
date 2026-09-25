@@ -17,7 +17,7 @@
     />
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./vendor/hls.min.js"></script>
-    <script type="module" src="./src/app.js?v=20260925-4"></script>
+    <script type="module" src="./src/app.js?v=20260925-6"></script>
   </head>
   <body>
     <header class="site-header">
@@ -165,6 +165,7 @@
             a working instance URL to use those sources.
           </p>
           <button type="submit">Save API URLs</button>
+          <button type="button" id="reset-api-urls">Reset API URLs</button>
           <p id="settings-message" role="status"></p>
         </form>
       </details>
@@ -251,6 +252,7 @@
             Specials
           </button>
         </div>
+        <p id="catalog-notice" class="catalog-notice" role="status" hidden></p>
         <div class="anime-grid" id="anime-grid" aria-live="polite"></div>
         <div class="pagination">
           <p id="page-error" class="page-error" role="status"></p>

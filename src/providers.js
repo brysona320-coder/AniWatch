@@ -1,4 +1,4 @@
-import { fetchJson, safeHttpsUrl, validBaseUrl } from "./api.js?v=20260925-4";
+import { fetchJson, safeHttpsUrl, validBaseUrl } from "./api.js?v=20260925-6";
 
 export const ANIAPI_DEFAULT = "https://api.aniapi.com";
 export const ANIMEPARADISE_DEFAULT = "https://api.animeparadise.moe";
