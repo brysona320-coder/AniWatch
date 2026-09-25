@@ -1,4 +1,5 @@
 import { fetchAnime, PROVIDERS } from "./providers.js";
+import { STREAMS } from "./streams.js";
 
 const STORAGE = {
   favorites: "aniwatch:favorites",
@@ -34,6 +35,14 @@ const elements = {
   dialogFavorite: $("#dialog-favorite"),
   dialogSource: $("#dialog-source"),
   dialogTrailer: $("#dialog-trailer"),
+  streamGrid: $("#stream-grid"),
+  watchDialog: $("#watch-dialog"),
+  watchClose: $("#watch-close"),
+  watchVideo: $("#watch-video"),
+  watchTitle: $("#watch-title"),
+  watchDescription: $("#watch-description"),
+  watchError: $("#watch-error"),
+  watchSource: $("#watch-source"),
 };
 
 function readStorage(key, fallback) {
@@ -99,6 +108,56 @@ function setTheme(theme) {
       : '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
   writeStorage(STORAGE.theme, theme);
 }
+function renderStreams() {
+  const fragment = document.createDocumentFragment();
+  for (const film of STREAMS) {
+    const card = document.createElement("article");
+    card.className = "stream-card";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "stream-cover";
+    button.setAttribute("aria-label", `Watch ${film.title}`);
+    const poster = document.createElement("img");
+    poster.src = film.poster;
+    poster.alt = "";
+    poster.loading = "lazy";
+    const play = document.createElement("span");
+    play.className = "stream-play";
+    play.textContent = "▶";
+    play.setAttribute("aria-hidden", "true");
+    button.append(poster, play);
+    button.addEventListener("click", () => openStream(film));
+    const title = document.createElement("h3");
+    title.textContent = film.title;
+    const meta = document.createElement("p");
+    meta.textContent = `${film.year} · Full film`;
+    card.append(button, title, meta);
+    fragment.append(card);
+  }
+  elements.streamGrid.replaceChildren(fragment);
+}
+function openStream(film) {
+  elements.watchTitle.textContent = film.title;
+  elements.watchDescription.textContent = film.description;
+  elements.watchSource.href = film.sourceUrl;
+  elements.watchError.textContent = "";
+  elements.watchVideo.poster = film.poster;
+  elements.watchVideo.src = film.videoUrl;
+  elements.watchDialog.showModal();
+  elements.watchVideo.play().catch(() => {
+    // Native controls remain available if autoplay is blocked.
+  });
+}
+function clearStream() {
+  elements.watchVideo.pause();
+  elements.watchVideo.removeAttribute("src");
+  elements.watchVideo.removeAttribute("poster");
+  elements.watchVideo.load();
+  elements.watchError.textContent = "";
+}
+function closeStream() {
+  elements.watchDialog.close();
+}
 function updateWatchlistControls() {
   elements.watchlist.setAttribute("aria-pressed", String(state.watchlist));
   elements.watchlistCount.textContent = String(favorites.size);
@@ -124,7 +183,7 @@ function updateHeading() {
     ? "The stories you saved, all in one place."
     : state.query
       ? "Explore matches from your selected source."
-      : "Stories worth making time for.";
+      : "Discover more titles from anime catalogs.";
   elements.mode.textContent = state.watchlist
     ? "WATCHLIST"
     : state.query
@@ -443,8 +502,23 @@ elements.dialog.addEventListener("close", () => {
 elements.dialogFavorite.addEventListener("click", () => {
   if (state.selected) toggleFavorite(state.selected);
 });
+elements.watchClose.addEventListener("click", closeStream);
+elements.watchDialog.addEventListener("click", (event) => {
+  if (event.target === elements.watchDialog) closeStream();
+});
+elements.watchDialog.addEventListener("close", clearStream);
+elements.watchVideo.addEventListener("error", () => {
+  if (elements.watchVideo.currentSrc) {
+    elements.watchError.textContent =
+      "This video could not play in your browser. Try the file on Wikimedia Commons.";
+  }
+});
+elements.watchVideo.addEventListener("playing", () => {
+  elements.watchError.textContent = "";
+});
 
 elements.provider.value = state.provider;
 setTheme(readStorage(STORAGE.theme, "dark") === "light" ? "light" : "dark");
 updateWatchlistControls();
+renderStreams();
 startCatalog();

@@ -1,6 +1,6 @@
 # AniWatch
 
-A small, dependency-free anime discovery site. Browse top rated titles or search Jikan, AniList, and Kitsu, filter by format, inspect details and trailers, and save a watchlist locally in your browser.
+A small, dependency-free anime site. Watch eight public-domain Japanese animated films on the site, browse or search Jikan, AniList, and Kitsu catalogs, and save a watchlist locally in your browser.
 
 ## Run
 
@@ -10,7 +10,13 @@ Serve the repository with any static file server, for example:
 python3 -m http.server 8000
 ```
 
-Open <http://localhost:8000>. Internet access is needed for anime data, cover images, and the optional web font. The site does not host or stream episodes. Watchlist and display preferences are stored only in this browser. Provider request limits or outages may temporarily prevent results; choose another source from the header if needed.
+Open <http://localhost:8000>. The full films stream directly from Wikimedia Commons when you press play. Internet access is also needed for catalog data, cover images, and the optional web font. Watchlist and display preferences are stored only in this browser. Provider request limits or outages may temporarily prevent catalog results; choose another source from the header if needed.
+
+## Video sources
+
+The playable films are listed in [`src/streams.js`](src/streams.js). Each entry links to its Wikimedia Commons file page, where its public-domain status can be checked. To add another film you have the right to stream, add a unique `id`, `title`, `year`, `description`, `poster`, direct HTTPS WebM or MP4 `videoUrl`, and `sourceUrl` to that list. The site uses native browser video controls and clears the video source when the player closes.
+
+Jikan, AniList, and Kitsu are **catalog sources**. Their records and trailer URLs do not grant full-episode playback. Titles from those catalogs need a separate playable, permitted video source before they can be watched on this site.
 
 ## Checks
 
