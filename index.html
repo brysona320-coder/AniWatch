@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10111b" />
+    <meta
+      name="description"
+      content="Discover anime across Jikan, AniList, and Kitsu. Save a personal watchlist in your browser."
+    />
+    <title>AniWatch — Find your next favorite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./src/app.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="./" id="home-link" aria-label="AniWatch home">
+          <span class="brand-mark" aria-hidden="true"
+            ><svg viewBox="0 0 36 36" fill="none">
+              <path d="m14 10 14 8-14 8V10Z" fill="currentColor" />
+              <circle
+                cx="18"
+                cy="18"
+                r="16"
+                stroke="currentColor"
+                stroke-width="2"
+              /></svg
+          ></span>
+          <span>Ani<span class="brand-accent">Watch</span></span>
+        </a>
+        <form class="search" id="search-form" role="search">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+            <circle
+              cx="11"
+              cy="11"
+              r="6.5"
+              stroke="currentColor"
+              stroke-width="1.8"
+            />
+            <path
+              d="m16 16 5 5"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            />
+          </svg>
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search for an anime..."
+            aria-label="Search anime"
+            autocomplete="off"
+          />
+          <kbd class="search-hint">↵</kbd>
+        </form>
+        <div class="header-actions">
+          <label class="provider-control" for="provider-select"
+            ><span>Source</span
+            ><select id="provider-select" aria-label="Anime data source">
+              <option value="anilist">AniList</option>
+              <option value="jikan">Jikan</option>
+              <option value="kitsu">Kitsu</option></select
+            ><svg aria-hidden="true" viewBox="0 0 12 12" fill="none">
+              <path
+                d="m2 4 4 4 4-4"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              /></svg
+          ></label>
+          <button
+            type="button"
+            class="icon-button"
+            id="theme-toggle"
+            aria-label="Switch to light theme"
+            title="Toggle theme"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5 8.5 8.5 0 1 0 20.5 15.5Z"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="watchlist-button"
+            id="watchlist-toggle"
+            aria-pressed="false"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M20.5 5.9a5.5 5.5 0 0 0-7.8 0L12 6.6l-.7-.7a5.5 5.5 0 0 0-7.8 7.8L12 22l8.5-8.3a5.5 5.5 0 0 0 0-7.8Z"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              /></svg
+            ><span>Watchlist</span
+            ><span class="watchlist-count" id="watchlist-count">0</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <span class="eyebrow"
+            ><span class="eyebrow-dot"></span> YOUR NEXT OBSESSION STARTS
+            HERE</span
+          >
+          <h1 id="hero-title">A whole world of <em>anime</em> awaits.</h1>
+          <p>
+            Find something worth watching. Explore the charts, search across
+            three anime catalogs, and keep your favorites close.
+          </p>
+          <a class="hero-link" href="#discover"
+            >Explore anime <span aria-hidden="true">↗</span></a
+          >
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <span class="orbit orbit-one"></span
+          ><span class="orbit orbit-two"></span
+          ><span class="art-star star-one">✦</span
+          ><span class="art-star star-two">✧</span>
+          <div class="art-card art-card-back"></div>
+          <div class="art-card art-card-front">
+            <span class="art-symbol">✦</span>
+          </div>
+          <span class="art-caption">EVERY STORY STARTS SOMEWHERE</span>
+        </div>
+      </section>
+
+      <section class="catalog" id="discover" aria-labelledby="catalog-title">
+        <div class="section-topline">
+          <span class="section-kicker"
+            >DISCOVER / <span id="section-mode">TOP RATED</span></span
+          ><span class="source-label" id="source-label"
+            >POWERED BY ANILIST</span
+          >
+        </div>
+        <div class="section-heading">
+          <div>
+            <h2 id="catalog-title">
+              Top rated anime<span class="heading-period">.</span>
+            </h2>
+            <p id="catalog-subtitle">Stories worth making time for.</p>
+          </div>
+          <span
+            id="result-count"
+            class="result-count"
+            aria-live="polite"
+          ></span>
+        </div>
+        <div
+          class="filter-row"
+          id="filter-row"
+          aria-label="Anime format filters"
+        >
+          <button
+            type="button"
+            class="filter active"
+            data-type="all"
+            aria-pressed="true"
+          >
+            All formats</button
+          ><button
+            type="button"
+            class="filter"
+            data-type="tv"
+            aria-pressed="false"
+          >
+            TV Series</button
+          ><button
+            type="button"
+            class="filter"
+            data-type="movie"
+            aria-pressed="false"
+          >
+            Movies</button
+          ><button
+            type="button"
+            class="filter"
+            data-type="ova"
+            aria-pressed="false"
+          >
+            OVA</button
+          ><button
+            type="button"
+            class="filter"
+            data-type="ona"
+            aria-pressed="false"
+          >
+            ONA</button
+          ><button
+            type="button"
+            class="filter"
+            data-type="special"
+            aria-pressed="false"
+          >
+            Specials
+          </button>
+        </div>
+        <div class="anime-grid" id="anime-grid" aria-live="polite"></div>
+        <div class="pagination">
+          <p id="page-error" class="page-error" role="status"></p>
+          <button type="button" id="load-more" class="load-more" hidden>
+            Load more <span aria-hidden="true">↓</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span
+        >Ani<span class="brand-accent">Watch</span>
+        <span class="footer-separator">/</span> Made for the love of
+        stories.</span
+      ><span>Anime information from Jikan, AniList &amp; Kitsu.</span>
+    </footer>
+
+    <dialog
+      id="anime-dialog"
+      class="anime-dialog"
+      aria-labelledby="dialog-title"
+    >
+      <button
+        type="button"
+        class="dialog-close"
+        id="dialog-close"
+        aria-label="Close details"
+      >
+        ×
+      </button>
+      <div class="dialog-layout">
+        <div class="dialog-poster">
+          <img id="dialog-image" alt="" />
+          <div class="dialog-poster-shade"></div>
+        </div>
+        <div class="dialog-info">
+          <span class="section-kicker" id="dialog-provider"></span>
+          <h2 id="dialog-title"></h2>
+          <div class="dialog-meta" id="dialog-meta"></div>
+          <p class="dialog-description" id="dialog-description"></p>
+          <div class="dialog-actions">
+            <button
+              type="button"
+              id="dialog-favorite"
+              class="dialog-favorite"
+            ></button
+            ><a
+              id="dialog-source"
+              class="dialog-source"
+              target="_blank"
+              rel="noopener noreferrer"
+              >View on source <span aria-hidden="true">↗</span></a
+            >
+          </div>
+          <div id="dialog-trailer" class="dialog-trailer"></div>
+        </div>
+      </div>
+    </dialog>
+  </body>
+</html>
