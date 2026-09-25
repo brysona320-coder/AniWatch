@@ -1,9 +1,11 @@
-import { fetchJson, safeHttpsUrl, validBaseUrl } from "./api.js";
+import { fetchJson, safeHttpsUrl, validBaseUrl } from "./api.js?v=20260925-4";
 
 export const ANIAPI_DEFAULT = "https://api.aniapi.com";
 export const ANIMEPARADISE_DEFAULT = "https://api.animeparadise.moe";
 export const PROVIDERS = {
   animeparadise: { label: "AnimeParadise" },
+  anilist: { label: "AniList" },
+  kitsu: { label: "Kitsu" },
   aniapi: { label: "AniAPI" },
 };
 const FORMATS = { tv: 0, movie: 2, special: 3, ova: 4, ona: 5 };
@@ -17,6 +19,71 @@ const FORMAT_NAMES = [
   "Music",
 ];
 const STATUS_NAMES = ["Finished", "Releasing", "Not yet released", "Cancelled"];
+const ANILIST_QUERY = `query AnimeCatalog($page: Int!, $search: String, $format: MediaFormat, $sort: [MediaSort]) {
+  Page(page: $page, perPage: 20) {
+    pageInfo { hasNextPage }
+    media(type: ANIME, search: $search, format: $format, sort: $sort, isAdult: false) {
+      id title { english romaji native } coverImage { extraLarge large }
+      averageScore format seasonYear status description trailer { id site }
+    }
+  }
+}`;
+
+function cleanTrailerId(value) {
+  return /^[\w-]{11}$/.test(value || "") ? value : "";
+}
+
+function fromAniList(anime) {
+  return {
+    key: `anilist:${anime.id}`,
+    provider: "anilist",
+    id: String(anime.id),
+    title:
+      anime.title?.english ||
+      anime.title?.romaji ||
+      anime.title?.native ||
+      "Untitled anime",
+    image: safeHttpsUrl(
+      anime.coverImage?.extraLarge || anime.coverImage?.large,
+    ),
+    score:
+      anime.averageScore == null
+        ? null
+        : Number((anime.averageScore / 10).toFixed(1)),
+    type: anime.format || "Unknown",
+    year: anime.seasonYear || "",
+    status: anime.status?.replaceAll("_", " ") || "",
+    description: anime.description || "",
+    trailerId:
+      anime.trailer?.site?.toLowerCase() === "youtube"
+        ? cleanTrailerId(anime.trailer.id)
+        : "",
+    url: `https://anilist.co/anime/${encodeURIComponent(anime.id)}`,
+  };
+}
+
+function fromKitsu(anime) {
+  const details = anime.attributes || {};
+  return {
+    key: `kitsu:${anime.id}`,
+    provider: "kitsu",
+    id: String(anime.id),
+    title: details.titles?.en || details.canonicalTitle || "Untitled anime",
+    image: safeHttpsUrl(
+      details.posterImage?.large || details.posterImage?.medium,
+    ),
+    score:
+      details.averageRating == null
+        ? null
+        : Number((Number(details.averageRating) / 10).toFixed(1)),
+    type: details.subtype || "Unknown",
+    year: details.startDate?.slice(0, 4) || "",
+    status: details.status || "",
+    description: details.synopsis || "",
+    trailerId: cleanTrailerId(details.youtubeVideoId),
+    url: `https://kitsu.io/anime/${encodeURIComponent(anime.id)}`,
+  };
+}
 
 function normalizeAnime(anime, baseUrl) {
   const id = String(anime.id);
@@ -97,6 +164,51 @@ export async function fetchAnime({
         .filter((item) => item?._id && Number(item.episodes) > 0)
         .map(normalizeWatchableAnime),
       hasMore: Boolean(response.pagination?.hasNext),
+    };
+  }
+  if (provider === "anilist") {
+    const variables = { page, sort: [query ? "SEARCH_MATCH" : "SCORE_DESC"] };
+    if (query) variables.search = query;
+    if (type !== "all") variables.format = type.toUpperCase();
+    const response = await fetchJson("https://graphql.anilist.co", "", signal, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: ANILIST_QUERY, variables }),
+    });
+    if (response.errors?.length)
+      throw new Error(
+        response.errors[0].message || "AniList could not return results.",
+      );
+    if (!Array.isArray(response.data?.Page?.media))
+      throw new Error("AniList returned an unexpected catalog response.");
+    return {
+      items: response.data.Page.media.map(fromAniList),
+      hasMore: Boolean(response.data.Page.pageInfo?.hasNextPage),
+    };
+  }
+  if (provider === "kitsu") {
+    const params = new URLSearchParams({
+      "page[limit]": "20",
+      "page[offset]": String((page - 1) * 20),
+      sort: "-averageRating",
+    });
+    if (query) params.set("filter[text]", query);
+    if (type !== "all") params.set("filter[subtype]", type);
+    const response = await fetchJson(
+      "https://kitsu.io",
+      `/api/edge/anime?${params}`,
+      signal,
+      { headers: { Accept: "application/vnd.api+json" } },
+    );
+    if (response.errors?.length)
+      throw new Error(
+        response.errors[0].detail || "Kitsu could not return results.",
+      );
+    if (!Array.isArray(response.data))
+      throw new Error("Kitsu returned an unexpected catalog response.");
+    return {
+      items: response.data.map(fromKitsu),
+      hasMore: Boolean(response.links?.next),
     };
   }
   if (provider !== "aniapi") throw new Error("Unknown anime catalog.");

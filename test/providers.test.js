@@ -116,6 +116,84 @@ test("default catalog includes only AnimeParadise titles with episodes", async (
   );
 });
 
+test("AniList searches by title and format through its browser API", async () => {
+  await withFetch(
+    {
+      data: {
+        Page: {
+          pageInfo: { hasNextPage: true },
+          media: [
+            {
+              id: 7,
+              title: { romaji: "Sample" },
+              averageScore: 87,
+              format: "TV",
+            },
+          ],
+        },
+      },
+    },
+    async (request) => {
+      const result = await fetchAnime({
+        provider: "anilist",
+        query: "Sample",
+        type: "tv",
+        page: 2,
+      });
+      assert.equal(request().url, "https://graphql.anilist.co");
+      assert.equal(request().options.method, "POST");
+      const variables = JSON.parse(request().options.body).variables;
+      assert.deepEqual(variables, {
+        page: 2,
+        sort: ["SEARCH_MATCH"],
+        search: "Sample",
+        format: "TV",
+      });
+      assert.equal(result.items[0].key, "anilist:7");
+      assert.equal(result.items[0].score, 8.7);
+      assert.equal(result.hasMore, true);
+    },
+  );
+});
+
+test("Kitsu sends its required media type and paginates by offset", async () => {
+  await withFetch(
+    {
+      data: [
+        {
+          id: "42",
+          attributes: {
+            canonicalTitle: "Another anime",
+            averageRating: "89.0",
+            subtype: "movie",
+          },
+        },
+      ],
+      links: { next: "https://kitsu.io/next" },
+    },
+    async (request) => {
+      const result = await fetchAnime({
+        provider: "kitsu",
+        query: "another",
+        type: "movie",
+        page: 3,
+      });
+      const url = new URL(request().url);
+      assert.equal(url.pathname, "/api/edge/anime");
+      assert.equal(url.searchParams.get("page[offset]"), "40");
+      assert.equal(url.searchParams.get("filter[text]"), "another");
+      assert.equal(url.searchParams.get("filter[subtype]"), "movie");
+      assert.equal(
+        request().options.headers.Accept,
+        "application/vnd.api+json",
+      );
+      assert.equal(result.items[0].key, "kitsu:42");
+      assert.equal(result.items[0].score, 8.9);
+      assert.equal(result.hasMore, true);
+    },
+  );
+});
+
 test("API base URL rejects credentials, mixed content, and query strings", () => {
   assert.equal(
     validBaseUrl("https://example.com/api/"),

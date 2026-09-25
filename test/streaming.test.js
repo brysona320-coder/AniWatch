@@ -50,7 +50,13 @@ test("Consumet search returns title candidates instead of choosing one", async (
 
 test("AnimeParadise title resolves to episodes and a playable HLS URL", async () => {
   await withFetch(
-    { success: true, data: [{ _id: "show-1", title: "Sample", episodes: 12 }] },
+    {
+      success: true,
+      data: [
+        { _id: "movie-1", title: "Sample: The Movie", episodes: 1 },
+        { _id: "show-1", title: "Sample", episodes: 12 },
+      ],
+    },
     async (request) => {
       const matches = await searchStreams({
         provider: "animeparadise",
@@ -58,6 +64,7 @@ test("AnimeParadise title resolves to episodes and a playable HLS URL", async ()
       });
       assert.equal(new URL(request().url).pathname, "/search");
       assert.equal(matches[0].id, "show-1");
+      assert.equal(matches[1].id, "movie-1");
     },
   );
   await withFetch(
