@@ -48,6 +48,58 @@ test("Consumet search returns title candidates instead of choosing one", async (
   );
 });
 
+test("AnimeParadise title resolves to episodes and a playable HLS URL", async () => {
+  await withFetch(
+    { success: true, data: [{ _id: "show-1", title: "Sample", episodes: 12 }] },
+    async (request) => {
+      const matches = await searchStreams({
+        provider: "animeparadise",
+        query: "Sample",
+      });
+      assert.equal(new URL(request().url).pathname, "/search");
+      assert.equal(matches[0].id, "show-1");
+    },
+  );
+  await withFetch(
+    {
+      success: true,
+      data: [{ uid: "episode-1", number: "1", title: "Pilot" }],
+    },
+    async (request) => {
+      const info = await getStreamInfo({
+        provider: "animeparadise",
+        id: "show-1",
+      });
+      assert.equal(new URL(request().url).pathname, "/anime/show-1/episode");
+      assert.equal(info.episodes[0].id, "episode-1:show-1");
+    },
+  );
+  await withFetch(
+    {
+      success: true,
+      data: {
+        episode: { streamLink: "https://media.example/master.m3u8?key=a&b=c" },
+      },
+    },
+    async (request) => {
+      const stream = await getEpisodeSources({
+        provider: "animeparadise",
+        episodeId: "episode-1:show-1",
+      });
+      const url = new URL(request().url);
+      assert.equal(url.pathname, "/ep/episode-1");
+      assert.equal(url.searchParams.get("origin"), "show-1");
+      assert.equal(stream.sources[0].hls, true);
+      const playbackUrl = new URL(stream.sources[0].url);
+      assert.equal(playbackUrl.host, "stream.animeparadise.moe");
+      assert.equal(
+        playbackUrl.searchParams.get("url"),
+        "https://media.example/master.m3u8?key=a&b=c",
+      );
+    },
+  );
+});
+
 test("AnimeKai and Animepahe use their documented episode routes", async () => {
   await withFetch(
     { episodes: [{ id: "ep 1", number: 1 }], totalEpisodes: 24 },

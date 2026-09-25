@@ -40,6 +40,7 @@ test("AniAPI search maps filters, pagination, and catalog data", async () => {
     },
     async (request) => {
       const result = await fetchAnime({
+        provider: "aniapi",
         baseUrl: "https://aniapi.example/api",
         query: "a & b",
         type: "movie",
@@ -67,12 +68,52 @@ test("AniAPI response errors and wrong response shapes are reported", async () =
   await withFetch(
     { status_code: 429, message: "Too many requests" },
     async () => {
-      await assert.rejects(fetchAnime({}), /Too many requests/);
+      await assert.rejects(
+        fetchAnime({ provider: "aniapi" }),
+        /Too many requests/,
+      );
     },
   );
   await withFetch({ data: [] }, async () => {
-    await assert.rejects(fetchAnime({}), /unexpected catalog response/);
+    await assert.rejects(
+      fetchAnime({ provider: "aniapi" }),
+      /unexpected catalog response/,
+    );
   });
+});
+
+test("default catalog includes only AnimeParadise titles with episodes", async () => {
+  await withFetch(
+    {
+      success: true,
+      data: [
+        {
+          _id: "show-1",
+          title: "Sample",
+          episodes: 12,
+          rate: "84.5",
+          posterImage: { large: "https://example.com/cover.jpg" },
+          animeSeason: { year: 2024 },
+          link: "sample",
+        },
+        { _id: "show-2", title: "Unavailable", episodes: 0 },
+      ],
+      pagination: { hasNext: true },
+    },
+    async (request) => {
+      const result = await fetchAnime({ page: 2, query: "Sample" });
+      const url = new URL(request().url);
+      assert.equal(url.host, "api.animeparadise.moe");
+      assert.equal(url.pathname, "/search");
+      assert.equal(url.searchParams.get("q"), "Sample");
+      assert.equal(url.searchParams.get("page"), "2");
+      assert.equal(result.items.length, 1);
+      assert.equal(result.items[0].key, "animeparadise:show-1");
+      assert.equal(result.items[0].score, 8.45);
+      assert.equal(result.items[0].episodesCount, 12);
+      assert.equal(result.hasMore, true);
+    },
+  );
 });
 
 test("API base URL rejects credentials, mixed content, and query strings", () => {

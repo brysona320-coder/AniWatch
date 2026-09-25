@@ -1,7 +1,10 @@
 import { fetchJson, safeHttpsUrl } from "./api.js";
 
 export const CONSUMET_DEFAULT = "https://api.consumet.org";
+export const ANIMEPARADISE_DEFAULT = "https://api.animeparadise.moe";
+const ANIMEPARADISE_STREAM = "https://stream.animeparadise.moe";
 export const STREAM_PROVIDERS = {
+  animeparadise: "AnimeParadise",
   animekai: "AnimeKai",
   animepahe: "Animepahe",
 };
@@ -11,15 +14,34 @@ function checkProvider(provider) {
     throw new Error("Unknown streaming source.");
 }
 
-export async function searchStreams({
-  baseUrl = CONSUMET_DEFAULT,
-  provider,
-  query,
-  signal,
-}) {
+export async function searchStreams({ baseUrl, provider, query, signal }) {
   checkProvider(provider);
+  if (provider === "animeparadise") {
+    const params = new URLSearchParams({ q: query, limit: "20" });
+    const data = await fetchJson(
+      baseUrl || ANIMEPARADISE_DEFAULT,
+      `/search?${params}`,
+      signal,
+    );
+    if (!data.success || !Array.isArray(data.data))
+      throw new Error(
+        data.error || "AnimeParadise returned an unexpected search response.",
+      );
+    return data.data
+      .filter((item) => item?._id && Number(item.episodes) > 0)
+      .map((item) => ({
+        id: String(item._id),
+        title: item.alternativeTitle?.english || item.title || "Untitled anime",
+        image: safeHttpsUrl(item.posterImage?.medium),
+        url: item.link
+          ? `https://www.animeparadise.moe/anime/${encodeURIComponent(item.link)}`
+          : "",
+        releaseDate: item.animeSeason?.year || "",
+        subOrDub: "sub",
+      }));
+  }
   const data = await fetchJson(
-    baseUrl,
+    baseUrl || CONSUMET_DEFAULT,
     `/anime/${provider}/${encodeURIComponent(query)}`,
     signal,
   );
@@ -37,18 +59,38 @@ export async function searchStreams({
 }
 
 export async function getStreamInfo({
-  baseUrl = CONSUMET_DEFAULT,
+  baseUrl,
   provider,
   id,
   episodePage = 1,
   signal,
 }) {
   checkProvider(provider);
+  if (provider === "animeparadise") {
+    const data = await fetchJson(
+      baseUrl || ANIMEPARADISE_DEFAULT,
+      `/anime/${encodeURIComponent(id)}/episode`,
+      signal,
+    );
+    if (!data.success || !Array.isArray(data.data))
+      throw new Error(data.error || "AnimeParadise returned no episode list.");
+    return {
+      title: "",
+      totalEpisodes: data.data.length,
+      episodes: data.data
+        .filter((episode) => episode?.uid)
+        .map((episode) => ({
+          id: `${episode.uid}:${id}`,
+          number: episode.number ?? "?",
+          title: episode.title || "",
+        })),
+    };
+  }
   const path =
     provider === "animekai"
       ? `/anime/animekai/info?id=${encodeURIComponent(id)}`
       : `/anime/animepahe/info/${encodeURIComponent(id)}?episodePage=${episodePage}`;
-  const data = await fetchJson(baseUrl, path, signal);
+  const data = await fetchJson(baseUrl || CONSUMET_DEFAULT, path, signal);
   if (!Array.isArray(data.episodes))
     throw new Error("Consumet returned no episode list for this title.");
   return {
@@ -65,17 +107,43 @@ export async function getStreamInfo({
 }
 
 export async function getEpisodeSources({
-  baseUrl = CONSUMET_DEFAULT,
+  baseUrl,
   provider,
   episodeId,
   signal,
 }) {
   checkProvider(provider);
+  if (provider === "animeparadise") {
+    const divider = episodeId.lastIndexOf(":");
+    if (divider < 1) throw new Error("Invalid AnimeParadise episode ID.");
+    const uid = episodeId.slice(0, divider);
+    const origin = episodeId.slice(divider + 1);
+    const data = await fetchJson(
+      baseUrl || ANIMEPARADISE_DEFAULT,
+      `/ep/${encodeURIComponent(uid)}?origin=${encodeURIComponent(origin)}`,
+      signal,
+    );
+    const link = data.data?.episode?.streamLink;
+    if (!data.success || !link)
+      throw new Error(
+        data.error || "AnimeParadise returned no video for this episode.",
+      );
+    return {
+      needsHeaders: false,
+      sources: [
+        {
+          url: `${ANIMEPARADISE_STREAM}/m3u8?url=${encodeURIComponent(link)}`,
+          quality: "Auto",
+          hls: true,
+        },
+      ],
+    };
+  }
   const path =
     provider === "animekai"
       ? `/anime/animekai/watch/${encodeURIComponent(episodeId)}`
       : `/anime/animepahe/watch?episodeId=${encodeURIComponent(episodeId)}`;
-  const data = await fetchJson(baseUrl, path, signal);
+  const data = await fetchJson(baseUrl || CONSUMET_DEFAULT, path, signal);
   if (!Array.isArray(data.sources))
     throw new Error("Consumet returned no video sources for this episode.");
   return {
