@@ -1,4 +1,4 @@
-import { fetchJson, safeHttpsUrl } from "./api.js?v=20260925-4";
+import { fetchJson, safeHttpsUrl } from "./api.js?v=20260925-6";
 
 export const CONSUMET_DEFAULT = "https://api.consumet.org";
 export const ANIMEPARADISE_DEFAULT = "https://api.animeparadise.moe";
