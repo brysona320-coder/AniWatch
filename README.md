@@ -1,220 +1,72 @@
 # AniWatch — GitHub Pages Edition
 
-AniWatch is a static anime frontend designed to deploy on **GitHub Pages**. The website itself does not require a Node server, Docker, Render, Prisma, or a private server.
+AniWatch is a static anime frontend hosted on **GitHub Pages**.
 
-The app keeps the existing anime catalog/streaming integrations and adds optional cloud features through Supabase:
+Features include email/password accounts through Supabase, profile avatars, Continue Watching sync, public/private lists, player customization, and browser offline downloads.
 
-- email/password accounts
-- profile avatars and display names
-- default audio/subtitle preferences
-- cross-device Continue Watching sync
-- custom public/private watch lists
-- theme, accent color, density, subtitle styling, playback speed, and intro/outro preferences
-- browser offline downloads through Service Worker + Cache Storage + IndexedDB
-- Adsterra ad placements for free accounts
-- PayPal subscription checkout with server-side verification through a Supabase Edge Function
+## Monetization
 
-## Important architecture
+AniWatch is **ads-only**. There is no PayPal integration, Premium tier, subscription billing, or paid membership code.
 
-GitHub Pages is static hosting. It cannot run Express, PHP, Python, Prisma, or other server-side code.
+The active publisher script is included directly in `index.html`:
 
-The site is hosted on GitHub Pages. Supabase is used only as the managed authentication/database/storage API needed for synced user accounts. Supabase Row Level Security protects each user's rows when the publishable browser key is used.
-
-If Supabase is not configured, the public anime browser/player and offline storage still work, but cloud accounts and cross-device sync stay disabled.
-
-## 1. Enable GitHub Pages
-
-This repository includes:
-
-```
-.github/workflows/pages.yml
+```html
+<script src="https://pl31543304.profitableratecpmnetwork.com/e7/8d/82/e78d820541c26ca920191a7d24b6e49d.js"></script>
 ```
 
-In GitHub open:
+That script URL is public publisher code, not a password or API secret.
+
+Do not click your own advertisements or manufacture impressions/clicks. Follow the ad network's publisher rules.
+
+## GitHub Pages
+
+In the repository open:
 
 **Settings → Pages → Build and deployment → Source → GitHub Actions**
 
-After a push to `main`, the workflow deploys the site.
+The workflow in `.github/workflows/pages.yml` deploys pushes to `main`.
 
-Expected project URL:
+Expected site URL:
 
 ```
 https://brysona320-coder.github.io/AniWatch/
 ```
 
-## 2. Create a Supabase project
+## Supabase accounts and sync
 
-Create a Supabase project, then open **SQL Editor** and run the complete contents of:
+Supabase is optional for the public browser/player, but required for cloud accounts, avatars, cross-device Continue Watching, and synced lists.
+
+Create a Supabase project and run:
 
 ```
 supabase/schema.sql
 ```
 
-That creates:
+in Supabase **SQL Editor**.
 
-- `profiles`
-- `watch_progress`
-- `watch_lists`
-- `list_items`
-- `subscriptions`
-- the `avatars` Storage bucket
-- Row Level Security policies
-- the new-user trigger that creates a profile, Plan to Watch list, and Favorites list
+Then add these GitHub repository variables under:
 
-In Supabase Auth settings, add the GitHub Pages URL as an allowed site/redirect URL:
+**Settings → Secrets and variables → Actions → Variables**
+
+```
+SUPABASE_URL
+SUPABASE_PUBLISHABLE_KEY
+```
+
+Add this URL to the allowed Supabase Auth site/redirect URLs:
 
 ```
 https://brysona320-coder.github.io/AniWatch/
 ```
 
-## 3. Add GitHub repository variables
+The publishable key is a browser-facing key. Never expose a Supabase service-role/secret key on GitHub Pages.
 
-In this repository open:
+## Offline downloads
 
-**Settings → Secrets and variables → Actions → Variables**
-
-Create these variables:
-
-```
-SUPABASE_URL
-SUPABASE_PUBLISHABLE_KEY
-PAYPAL_CLIENT_ID
-PAYPAL_PLAN_ID
-PAYPAL_PRICE
-PAYPAL_CURRENCY
-ADSTERRA_HEADER_KEY
-ADSTERRA_RECTANGLE_KEY
-ADSTERRA_SIDEBAR_KEY
-```
-
-Only `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are required for accounts.
-
-The Supabase **publishable key is intended for browser use** when RLS is configured. Never put a Supabase service-role/secret key into GitHub Pages or repository variables used to build the page.
-
-The Pages workflow creates `src/runtime-config.js` during deployment from these variables. No source-code edits are required.
-
-## 4. PayPal Premium
-
-The static site uses PayPal's JavaScript subscription button. The browser receives only:
-
-```
-PAYPAL_CLIENT_ID
-PAYPAL_PLAN_ID
-```
-
-Do **not** expose a PayPal Client Secret in GitHub Pages.
-
-Create a PayPal subscription product/plan in the PayPal developer/business dashboard and put its public plan ID into `PAYPAL_PLAN_ID`.
-
-Example optional display values:
-
-```
-PAYPAL_PRICE=4.99
-PAYPAL_CURRENCY=USD
-```
-
-The configured PayPal app/plan determines the actual recurring charge. The display price should match the PayPal plan.
-
-### Secure Premium verification
-
-The repository contains:
-
-```
-supabase/functions/paypal-subscription/index.ts
-```
-
-Deploy that function to your Supabase project with JWT gateway verification disabled because it accepts both PayPal webhooks and signed-in browser verification requests. The function verifies the browser's Supabase token itself.
-
-Using the Supabase CLI:
-
-```sh
-supabase login
-supabase link --project-ref YOUR_PROJECT_REF
-supabase functions deploy paypal-subscription --no-verify-jwt
-```
-
-You can also create/deploy the function through Supabase Dashboard → Edge Functions.
-
-Set these **Supabase Edge Function secrets**, not GitHub Pages variables:
-
-```
-PAYPAL_ENV=sandbox
-PAYPAL_CLIENT_ID=...
-PAYPAL_CLIENT_SECRET=...
-PAYPAL_PLAN_ID=...
-PAYPAL_WEBHOOK_ID=...
-APP_ORIGIN=https://brysona320-coder.github.io
-```
-
-Supabase automatically supplies its own project URL/keys to Edge Functions.
-
-For real payments, use the matching live PayPal application and live plan. Account eligibility and identity requirements are controlled by PayPal and should not be bypassed.
-
-### PayPal webhook
-
-In the PayPal developer dashboard, create a webhook pointing to:
-
-```
-https://YOUR_SUPABASE_PROJECT_REF.supabase.co/functions/v1/paypal-subscription
-```
-
-Enable at least:
-
-```
-BILLING.SUBSCRIPTION.ACTIVATED
-BILLING.SUBSCRIPTION.SUSPENDED
-BILLING.SUBSCRIPTION.CANCELLED
-BILLING.SUBSCRIPTION.EXPIRED
-```
-
-Copy the resulting webhook ID into the Supabase Edge Function secret `PAYPAL_WEBHOOK_ID`.
-
-Premium is only enabled after the Edge Function verifies the PayPal subscription. A visitor cannot unlock Premium merely by changing browser storage.
-
-## 5. Ads
-
-Create Adsterra zones and add their public zone keys to GitHub repository variables:
-
-```
-ADSTERRA_HEADER_KEY
-ADSTERRA_RECTANGLE_KEY
-ADSTERRA_SIDEBAR_KEY
-```
-
-Blank zones stay hidden. Accounts whose verified Supabase profile has `is_premium = true` do not render the configured ad slots.
-
-## 6. Offline downloads
-
-The Service Worker caches supported direct media or HLS manifests/segments in browser Cache Storage and tracks the download library in IndexedDB.
-
-Offline downloading depends on:
-
-- the upstream video host allowing CORS/browser fetches
-- the browser having enough storage quota
-- the media not requiring unsupported request headers or DRM
-
-AniWatch does not bypass DRM, authentication headers, or source restrictions.
-
-## 7. Run locally
-
-Because this is a static site:
-
-```sh
-python3 -m http.server 8000
-```
-
-Then open:
-
-```
-http://localhost:8000
-```
-
-The committed `src/runtime-config.js` is intentionally blank for local/public safety. GitHub Actions replaces it in the deployed artifact using repository variables.
+The Service Worker stores supported media in browser Cache Storage and tracks downloads with IndexedDB. Whether a video can be saved depends on the upstream host's CORS/access rules and browser storage quota.
 
 ## Tests
 
 ```sh
 npm test
 ```
-
-These tests cover the existing provider and streaming adapters.

@@ -24,19 +24,19 @@ jobs:
         env:
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
-          PAYPAL_CLIENT_ID: ${{ vars.PAYPAL_CLIENT_ID }}
-          PAYPAL_PLAN_ID: ${{ vars.PAYPAL_PLAN_ID }}
-          PAYPAL_PRICE: ${{ vars.PAYPAL_PRICE }}
-          PAYPAL_CURRENCY: ${{ vars.PAYPAL_CURRENCY }}
-          ADSTERRA_HEADER_KEY: ${{ vars.ADSTERRA_HEADER_KEY }}
-          ADSTERRA_RECTANGLE_KEY: ${{ vars.ADSTERRA_RECTANGLE_KEY }}
-          ADSTERRA_SIDEBAR_KEY: ${{ vars.ADSTERRA_SIDEBAR_KEY }}
         run: |
           mkdir -p _site
-          rsync -a ./ _site/             --exclude '.git/'             --exclude '.github/'             --exclude '_site/'             --exclude 'server/'             --exclude 'prisma/'             --exclude 'supabase/'             --exclude 'test/'             --exclude 'Dockerfile'             --exclude 'docker-compose.yml'             --exclude 'render.yaml'             --exclude '.dockerignore'             --exclude '.env.example'
-          export PAYPAL_PRICE="${PAYPAL_PRICE:-4.99}"
-          export PAYPAL_CURRENCY="${PAYPAL_CURRENCY:-USD}"
-          jq -n             --arg supabaseUrl "$SUPABASE_URL"             --arg supabasePublishableKey "$SUPABASE_PUBLISHABLE_KEY"             --arg paypalClientId "$PAYPAL_CLIENT_ID"             --arg paypalPlanId "$PAYPAL_PLAN_ID"             --arg paypalPrice "$PAYPAL_PRICE"             --arg paypalCurrency "$PAYPAL_CURRENCY"             --arg headerKey "$ADSTERRA_HEADER_KEY"             --arg rectangleKey "$ADSTERRA_RECTANGLE_KEY"             --arg sidebarKey "$ADSTERRA_SIDEBAR_KEY"             '{supabaseUrl:$supabaseUrl,supabasePublishableKey:$supabasePublishableKey,paypalClientId:$paypalClientId,paypalPlanId:$paypalPlanId,paypalPrice:$paypalPrice,paypalCurrency:$paypalCurrency,ads:{headerKey:$headerKey,rectangleKey:$rectangleKey,sidebarKey:$sidebarKey}}'             > /tmp/aniwatch-config.json
+          rsync -a ./ _site/ \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '_site/' \
+            --exclude 'supabase/' \
+            --exclude 'test/'
+          jq -n \
+            --arg supabaseUrl "$SUPABASE_URL" \
+            --arg supabasePublishableKey "$SUPABASE_PUBLISHABLE_KEY" \
+            '{supabaseUrl:$supabaseUrl,supabasePublishableKey:$supabasePublishableKey}' \
+            > /tmp/aniwatch-config.json
           printf 'export const RUNTIME_CONFIG = Object.freeze(%s);\n' "$(cat /tmp/aniwatch-config.json)" > _site/src/runtime-config.js
           touch _site/.nojekyll
 

@@ -1,5 +1,8 @@
 -- AniWatch GitHub Pages backend schema for Supabase.
--- Run this once in Supabase SQL Editor.
+-- Run this in Supabase SQL Editor. Safe to re-run.
+-- Cleanup from older builds that included subscriptions:
+drop table if exists public.subscriptions cascade;
+alter table if exists public.profiles drop column if exists is_premium;
 
 create extension if not exists pgcrypto;
 
@@ -22,7 +25,6 @@ create table if not exists public.profiles (
   auto_skip_outro boolean not null default false,
   intro_seconds integer not null default 90 check (intro_seconds between 0 and 600),
   outro_seconds integer not null default 90 check (outro_seconds between 0 and 600),
-  is_premium boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -67,14 +69,6 @@ create table if not exists public.watch_progress (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique(user_id, media_key)
-);
-
-create table if not exists public.subscriptions (
-  user_id uuid primary key references public.profiles(id) on delete cascade,
-  paypal_subscription_id text unique not null,
-  status text not null,
-  current_period_end timestamptz,
-  updated_at timestamptz not null default now()
 );
 
 create index if not exists watch_progress_user_updated_idx
@@ -148,14 +142,12 @@ alter table public.profiles enable row level security;
 alter table public.watch_lists enable row level security;
 alter table public.list_items enable row level security;
 alter table public.watch_progress enable row level security;
-alter table public.subscriptions enable row level security;
 
-revoke all on public.profiles, public.watch_lists, public.list_items, public.watch_progress, public.subscriptions from anon;
+revoke all on public.profiles, public.watch_lists, public.list_items, public.watch_progress from anon;
 grant select, update on public.profiles to authenticated;
 grant select, insert, update, delete on public.watch_lists to authenticated;
 grant select, insert, update, delete on public.list_items to authenticated;
 grant select, insert, update, delete on public.watch_progress to authenticated;
-grant select on public.subscriptions to authenticated;
 grant select on public.watch_lists, public.list_items, public.profiles to anon;
 
 drop policy if exists "profiles own read" on public.profiles;
@@ -241,11 +233,6 @@ create policy "progress own all" on public.watch_progress
 for all to authenticated
 using (user_id = auth.uid())
 with check (user_id = auth.uid());
-
-drop policy if exists "subscriptions own read" on public.subscriptions;
-create policy "subscriptions own read" on public.subscriptions
-for select to authenticated
-using (user_id = auth.uid());
 
 insert into storage.buckets(id, name, public, file_size_limit, allowed_mime_types)
 values (

@@ -90,8 +90,6 @@
 .list-items { display: grid; gap: .5rem; margin-top: 1rem; }
 .list-items > div { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid rgba(255,255,255,.07); padding-top: .55rem; }
 .share-url { margin-top: .8rem; font-size: .82rem; }
-.premium-status { display: grid; gap: .35rem; padding: 1rem; border-radius: 14px; background: rgba(255,255,255,.04); margin-bottom: 1rem; }
-.premium-status.active { border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); }
 .settings-help { color: #9898aa; font-size: .9rem; line-height: 1.6; }
 .player-tools { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
 .player-tools button { background: rgba(255,255,255,.05); }
