@@ -1,0 +1,10 @@
+{
+  "name": "AniWatch",
+  "short_name": "AniWatch",
+  "description": "Browse, watch, sync and save anime for offline playback.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#10111b",
+  "theme_color": "#8b5cf6",
+  "icons": []
+}

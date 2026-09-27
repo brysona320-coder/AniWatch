@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SubscriptionStatus {
+  FREE
+  APPROVAL_PENDING
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+  EXPIRED
+}
+
+enum ListVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum ThemeMode {
+  DARK
+  LIGHT
+  CUSTOM
+}
+
+enum Density {
+  COMPACT
+  COMFORTABLE
+  SPACIOUS
+}
+
+model User {
+  id                           String             @id @default(cuid())
+  email                        String             @unique
+  passwordHash                 String
+  displayName                  String
+  avatarData                   Bytes?
+  avatarMime                   String?
+  defaultAudio                 String             @default("japanese")
+  defaultSubtitle              String             @default("english")
+  theme                        ThemeMode          @default(DARK)
+  accentColor                  String             @default("#8b5cf6")
+  density                      Density            @default(COMFORTABLE)
+  subtitleFont                 String             @default("DM Sans")
+  subtitleColor                String             @default("#ffffff")
+  subtitleBackground           String             @default("#000000")
+  subtitleOpacity              Float              @default(0.75)
+  playbackSpeed                Float              @default(1)
+  autoSkipIntro                Boolean            @default(false)
+  autoSkipOutro                Boolean            @default(false)
+  introSeconds                 Int                @default(90)
+  outroSeconds                 Int                @default(90)
+  paypalSubscriptionId         String?            @unique
+  subscriptionStatus           SubscriptionStatus @default(FREE)
+  subscriptionCurrentPeriodEnd DateTime?
+  createdAt                    DateTime           @default(now())
+  updatedAt                    DateTime           @updatedAt
+  progresses                   Progress[]
+  lists                        WatchList[]
+}
+
+model Progress {
+  id            String   @id @default(cuid())
+  userId        String
+  mediaKey      String
+  provider      String
+  animeId       String
+  episodeId     String
+  animeTitle    String
+  episodeTitle  String?
+  episodeNumber String?
+  position      Float    @default(0)
+  duration      Float    @default(0)
+  completed     Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mediaKey])
+  @@index([userId, updatedAt])
+}
+
+model WatchList {
+  id         String         @id @default(cuid())
+  userId     String
+  name       String
+  slug       String
+  visibility ListVisibility @default(PRIVATE)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items      ListItem[]
+
+  @@unique([userId, slug])
+  @@index([userId, updatedAt])
+}
+
+model ListItem {
+  id        String    @id @default(cuid())
+  listId    String
+  mediaKey  String
+  provider  String
+  animeId   String
+  title     String
+  image     String?
+  sourceUrl String?
+  addedAt   DateTime  @default(now())
+  list      WatchList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, mediaKey])
+  @@index([listId, addedAt])
+}
+
+model AppConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

@@ -338,6 +338,16 @@ async function selectEpisode(episode, button) {
     if (!result.sources.length)
       throw new Error("No browser-playable video sources were returned.");
     state.videoSources = result.sources;
+    window.dispatchEvent(new CustomEvent("aniwatch:episode-selected", {
+      detail: {
+        anime: state.watchAnime,
+        provider: state.streamProvider,
+        streamId: state.streamId,
+        streamTitle: state.streamTitle,
+        episode,
+        sources: result.sources
+      }
+    }));
     elements.streamEpisodes
       .querySelectorAll("button")
       .forEach((item) => item.classList.toggle("active", item === button));
@@ -705,6 +715,7 @@ function toggleFavorite(anime) {
 }
 function openDetails(anime) {
   state.selected = anime;
+  window.dispatchEvent(new CustomEvent("aniwatch:anime-selected", { detail: { anime } }));
   elements.dialogImage.src = anime.image || "";
   elements.dialogImage.alt = anime.image ? `Cover art for ${anime.title}` : "";
   elements.dialogProvider.textContent = `FROM ${PROVIDERS[anime.provider].label.toUpperCase()}`;

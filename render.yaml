@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: aniwatch
+    runtime: docker
+    plan: starter
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_URL
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aniwatch-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PAYPAL_ENV
+        value: sandbox
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: PAYPAL_PLAN_ID
+        sync: false
+      - key: PAYPAL_AUTO_SETUP
+        value: "true"
+      - key: PAYPAL_SUBSCRIPTION_PRICE
+        value: "4.99"
+      - key: PAYPAL_CURRENCY
+        value: USD
+      - key: ADS_ENABLED
+        value: "true"
+      - key: ADSTERRA_HEADER_KEY
+        sync: false
+      - key: ADSTERRA_RECTANGLE_KEY
+        sync: false
+      - key: ADSTERRA_SIDEBAR_KEY
+        sync: false
+
+databases:
+  - name: aniwatch-db
+    plan: starter
