@@ -481,13 +481,28 @@ function bindPlayer() {
 function adFrame(key, width, height) {
   const clean = String(key || "").replace(/[^a-zA-Z0-9_-]/g, "");
   if (!clean) return "";
-  const srcdoc = '<!doctype html><html><body style="margin:0;display:grid;place-items:center;min-height:100vh;background:transparent"><script>atOptions={key:\\'' +
-    clean + '\\',format:\\'iframe\\',height:' + height + ',width:' + width +
-    ',params:{}};<\\/script><script src="https://www.highperformanceformat.com/' + encodeURIComponent(clean) +
+  const options = JSON.stringify({
+    key: clean,
+    format: "iframe",
+    height,
+    width,
+    params: {}
+  });
+  const srcdoc =
+    '<!doctype html><html><body style="margin:0;display:grid;place-items:center;min-height:100vh;background:transparent">' +
+    "<script>atOptions=" + options + ";<\\/script>" +
+    '<script src="https://www.highperformanceformat.com/' +
+    encodeURIComponent(clean) +
     '/invoke.js"><\\/script></body></html>';
-  return '<iframe title="Advertisement" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer-when-downgrade" width="' +
-    width + '" height="' + height + '" srcdoc="' + escapeHtml(srcdoc) +
-    '"></iframe><span class="ad-runtime-label">Advertisement</span>';
+  return (
+    '<iframe title="Advertisement" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer-when-downgrade" width="' +
+    width +
+    '" height="' +
+    height +
+    '" srcdoc="' +
+    escapeHtml(srcdoc) +
+    '"></iframe><span class="ad-runtime-label">Advertisement</span>'
+  );
 }
 
 function renderAds() {
