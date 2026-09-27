@@ -1,27 +1,25 @@
-# AniWatch ad setup on GitHub Pages
+# Ads on AniWatch
 
-AniWatch renders ad placements entirely in the GitHub Pages frontend.
-
-## Configure the site
-
-Create your publisher website and ad zones in your ad-network dashboard. Then open this GitHub repository:
-
-**Settings → Secrets and variables → Actions → Variables**
-
-Add the public zone keys:
+Your publisher website entry is:
 
 ```
-ADSTERRA_HEADER_KEY
-ADSTERRA_RECTANGLE_KEY
-ADSTERRA_SIDEBAR_KEY
+6081873 — brysona320-coder.github.io
 ```
 
-Push to `main` or manually run the **Deploy GitHub Pages** workflow. The workflow injects those values into the static deployment; no source edit is needed.
+The number `6081873` is the website entry/site ID. It is **not** something AniWatch needs to paste into JavaScript by itself.
 
-If a key is blank, its slot stays hidden.
+The ad code you supplied is:
 
-## Premium behavior
+```html
+<script src="https://pl31543304.profitableratecpmnetwork.com/e7/8d/82/e78d820541c26ca920191a7d24b6e49d.js"></script>
+```
 
-When Supabase is configured, AniWatch reads the signed-in user's verified `profiles.is_premium` value. Premium accounts do not render the configured ad placements.
+AniWatch now includes that exact script in `index.html`.
 
-Do not click your own ads, manufacture traffic, or attempt to bypass the ad network's policies. Payout methods, thresholds, eligibility, and current ad formats are controlled by the publisher network and should be checked in its dashboard.
+## What “0 ad unit(s)” means
+
+It means the publisher dashboard currently reports no ad units under that website entry. If the dashboard still says zero after you generated the script, refresh/recheck the website entry in the publisher dashboard. The script itself is already valid HTML publisher code and does not need to be converted into one of the old `ADSTERRA_*_KEY` variables.
+
+If you create additional banner/native ad units later, each unit may provide different placement code. Those should be added as their own placements rather than reusing website ID `6081873`.
+
+Do not click your own ads or generate fake impressions/clicks.
