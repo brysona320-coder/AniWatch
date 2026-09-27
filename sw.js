@@ -1,4 +1,4 @@
-const SHELL_CACHE = "aniwatch-shell-v3";
+const SHELL_CACHE = "aniwatch-shell-v4";
 const MEDIA_CACHE = "aniwatch-media-v2";
 const DB_NAME = "aniwatch-offline";
 const DB_VERSION = 1;
@@ -12,8 +12,7 @@ const SHELL = [
   "./src/providers.js",
   "./src/streaming.js",
   "./src/app.js",
-  "./src/client-api.js",
-  "./src/fullstack.js",
+  "./src/pages-app.js",
   "./vendor/hls.min.js",
   "./manifest.webmanifest"
 ];
@@ -43,8 +42,21 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
-  if (url.pathname.startsWith("/api/")) {
-    event.respondWith(fetch(request));
+
+  if (
+    url.origin === self.location.origin &&
+    url.pathname.endsWith("/src/runtime-config.js")
+  ) {
+    event.respondWith((async () => {
+      const shell = await caches.open(SHELL_CACHE);
+      try {
+        const response = await fetch(request, { cache: "no-store" });
+        if (response.ok) await shell.put(request, response.clone());
+        return response;
+      } catch {
+        return (await shell.match(request, { ignoreSearch: true })) || Response.error();
+      }
+    })());
     return;
   }
 
@@ -68,8 +80,7 @@ self.addEventListener("fetch", (event) => {
       const response = await fetch(request);
       if (
         response.ok &&
-        url.origin === self.location.origin &&
-        !url.pathname.startsWith("/api/")
+        url.origin === self.location.origin
       ) {
         const shell = await caches.open(SHELL_CACHE);
         event.waitUntil(shell.put(request, response.clone()));
