@@ -1,4 +1,4 @@
-const SHELL_CACHE = "aniwatch-shell-v2";
+const SHELL_CACHE = "aniwatch-shell-v3";
 const MEDIA_CACHE = "aniwatch-media-v2";
 const DB_NAME = "aniwatch-offline";
 const DB_VERSION = 1;

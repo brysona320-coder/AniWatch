@@ -13,5 +13,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+      - name: Check browser JavaScript syntax
+        run: |
+          node --check src/app.js
+          node --check src/pages-app.js
+          node --check sw.js
       - run: npm test

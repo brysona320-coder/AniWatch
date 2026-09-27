@@ -1,51 +1,27 @@
-# Monetization setup
+# AniWatch ad setup on GitHub Pages
 
-AniWatch supports two independent revenue paths:
+AniWatch renders ad placements entirely in the GitHub Pages frontend.
 
-1. Display advertising for free accounts.
-2. An optional PayPal Premium subscription that disables ads.
+## Configure the site
 
-## PayPal Premium
+Create your publisher website and ad zones in your ad-network dashboard. Then open this GitHub repository:
 
-Create a PayPal developer application for the merchant account that should receive subscription payments. Put its credentials into deployment environment variables:
+**Settings → Secrets and variables → Actions → Variables**
 
-```
-PAYPAL_ENV=sandbox
-PAYPAL_CLIENT_ID=...
-PAYPAL_CLIENT_SECRET=...
-PAYPAL_WEBHOOK_ID=...
-PAYPAL_AUTO_SETUP=true
-PAYPAL_SUBSCRIPTION_PRICE=4.99
-PAYPAL_CURRENCY=USD
-```
-
-Use sandbox credentials while testing. When ready for real payments, switch `PAYPAL_ENV` to `live` and replace the credentials with the live credentials for that same merchant account.
-
-When `PAYPAL_AUTO_SETUP=true` and `PAYPAL_PLAN_ID` is empty, the server creates the PayPal product and monthly billing plan automatically on the first checkout and stores the plan ID in the database.
-
-Configure the PayPal webhook URL as:
+Add the public zone keys:
 
 ```
-https://YOUR-DOMAIN/api/paypal/webhook
+ADSTERRA_HEADER_KEY
+ADSTERRA_RECTANGLE_KEY
+ADSTERRA_SIDEBAR_KEY
 ```
 
-The server verifies PayPal webhook signatures before changing a user's Premium status.
+Push to `main` or manually run the **Deploy GitHub Pages** workflow. The workflow injects those values into the static deployment; no source edit is needed.
 
-## Adsterra slots
-
-Create your website and ad zones in the Adsterra publisher dashboard, then provide the zone keys as environment variables:
-
-```
-ADS_ENABLED=true
-ADSTERRA_HEADER_KEY=...
-ADSTERRA_RECTANGLE_KEY=...
-ADSTERRA_SIDEBAR_KEY=...
-```
-
-No source-code edit is needed. Empty keys keep those placements hidden.
-
-Ad revenue payout details, thresholds, supported payment methods, and eligibility are controlled by your ad-network account and may change over time; check the publisher dashboard for the current terms.
+If a key is blank, its slot stays hidden.
 
 ## Premium behavior
 
-An account becomes ad-free only after the backend receives and verifies an active PayPal subscription event. Cancelling, suspending, or expiring the subscription updates the stored account status through PayPal webhooks.
+When Supabase is configured, AniWatch reads the signed-in user's verified `profiles.is_premium` value. Premium accounts do not render the configured ad placements.
+
+Do not click your own ads, manufacture traffic, or attempt to bypass the ad network's policies. Payout methods, thresholds, eligibility, and current ad formats are controlled by the publisher network and should be checked in its dashboard.
