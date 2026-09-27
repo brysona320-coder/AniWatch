@@ -137,12 +137,6 @@ function injectUi() {
     );
   }
 
-  const discover = $("#discover");
-  if (discover && !$("#ad-header-slot")) {
-    discover.insertAdjacentHTML("beforebegin", '<section id="ad-header-slot" class="ad-runtime-slot" hidden></section>');
-    discover.insertAdjacentHTML("afterend", '<section id="ad-content-slot" class="ad-runtime-slot ad-runtime-rectangle" hidden></section>');
-  }
-
   if ($("main") && !$("#continue-watching")) {
     $("main").insertAdjacentHTML(
       "afterbegin",
@@ -250,7 +244,6 @@ function renderAccount() {
   } else {
     $("#continue-watching").hidden = true;
   }
-  renderAds();
 }
 
 async function updateProfile(values) {
@@ -473,47 +466,6 @@ function bindPlayer() {
     if (state.profile && Number.isFinite(video.duration)) video.currentTime = Math.max(0, video.duration - state.profile.outro_seconds);
   });
   $("#player-download").addEventListener("click", downloadCurrent);
-}
-
-function adFrame(key, width, height) {
-  const clean = String(key || "").replace(/[^a-zA-Z0-9_-]/g, "");
-  if (!clean) return "";
-  const options = JSON.stringify({
-    key: clean,
-    format: "iframe",
-    height,
-    width,
-    params: {}
-  });
-  const srcdoc =
-    '<!doctype html><html><body style="margin:0;display:grid;place-items:center;min-height:100vh;background:transparent">' +
-    "<script>atOptions=" + options + ";<\\/script>" +
-    '<script src="https://www.highperformanceformat.com/' +
-    encodeURIComponent(clean) +
-    '/invoke.js"><\\/script></body></html>';
-  return (
-    '<iframe title="Advertisement" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer-when-downgrade" width="' +
-    width +
-    '" height="' +
-    height +
-    '" srcdoc="' +
-    escapeHtml(srcdoc) +
-    '"></iframe><span class="ad-runtime-label">Advertisement</span>'
-  );
-}
-
-function renderAds() {
-  const ads = RUNTIME_CONFIG.ads || {};
-  const header = $("#ad-header-slot");
-  const content = $("#ad-content-slot");
-  if (header) {
-    header.hidden = !ads.headerKey;
-    if (!header.hidden) header.innerHTML = adFrame(ads.headerKey, 728, 90);
-  }
-  if (content) {
-    content.hidden = !ads.rectangleKey;
-    if (!content.hidden) content.innerHTML = adFrame(ads.rectangleKey, 300, 250);
-  }
 }
 
 async function registerServiceWorker() {
@@ -788,7 +740,6 @@ async function init() {
     renderAccount();
   }
 
-  renderAds();
   await showPublicList();
 }
 
