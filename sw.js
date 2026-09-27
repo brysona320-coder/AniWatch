@@ -55,7 +55,7 @@ self.addEventListener("fetch", (event) => {
 
     if (url.origin === self.location.origin) {
       const shell = await caches.open(SHELL_CACHE);
-      const cached = await shell.match(request);
+      const cached = await shell.match(request, { ignoreSearch: true });
       if (cached) {
         event.waitUntil(fetch(request).then((response) => {
           if (response.ok) return shell.put(request, response.clone());
