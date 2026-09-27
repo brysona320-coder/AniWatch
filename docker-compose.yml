@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aniwatch
+      POSTGRES_USER: aniwatch
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    volumes:
+      - aniwatch_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aniwatch -d aniwatch"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      DATABASE_URL: postgresql://aniwatch:${POSTGRES_PASSWORD:-change-me}@db:5432/aniwatch?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      PAYPAL_ENV: ${PAYPAL_ENV:-sandbox}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      PAYPAL_WEBHOOK_ID: ${PAYPAL_WEBHOOK_ID:-}
+      PAYPAL_PLAN_ID: ${PAYPAL_PLAN_ID:-}
+      PAYPAL_AUTO_SETUP: ${PAYPAL_AUTO_SETUP:-true}
+      PAYPAL_SUBSCRIPTION_PRICE: ${PAYPAL_SUBSCRIPTION_PRICE:-4.99}
+      PAYPAL_CURRENCY: ${PAYPAL_CURRENCY:-USD}
+      ADS_ENABLED: ${ADS_ENABLED:-true}
+      ADSTERRA_HEADER_KEY: ${ADSTERRA_HEADER_KEY:-}
+      ADSTERRA_RECTANGLE_KEY: ${ADSTERRA_RECTANGLE_KEY:-}
+      ADSTERRA_SIDEBAR_KEY: ${ADSTERRA_SIDEBAR_KEY:-}
+    ports:
+      - "3000:3000"
+
+volumes:
+  aniwatch_db:
