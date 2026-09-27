@@ -80,7 +80,6 @@ function injectUi() {
       '<button type="button" data-page="player">Player</button>',
       '<button type="button" data-page="lists">Lists</button>',
       '<button type="button" data-page="downloads">Downloads</button>',
-      '<button type="button" data-page="premium">Premium</button>',
       '<button type="button" id="logout-button" hidden>Log out</button>',
       '</aside><section class="account-content">',
       '<div id="cloud-missing" hidden><h3>Cloud sync is not configured</h3>',
@@ -126,7 +125,6 @@ function injectUi() {
       '<p>Downloads stay on this device in browser storage and require the media host to allow browser caching.</p>',
       '<button id="download-current" class="primary-action" type="button" disabled>Download current episode</button>',
       '<div id="download-progress"></div><div id="downloads-manager"></div></section>',
-      '<section data-panel="premium" hidden><h3>Premium</h3><div id="premium-content"></div></section>',
       '</div></section></div></dialog>'
     ].join("");
     document.body.insertAdjacentHTML("beforeend", html);
@@ -173,7 +171,6 @@ function showPanel(name) {
   });
   if (name === "lists") loadLists();
   if (name === "downloads") refreshDownloads();
-  if (name === "premium") renderPremium();
 }
 
 function applyProfileTheme() {
@@ -506,111 +503,16 @@ function adFrame(key, width, height) {
 }
 
 function renderAds() {
-  const premium = Boolean(state.profile?.is_premium);
   const ads = RUNTIME_CONFIG.ads || {};
   const header = $("#ad-header-slot");
   const content = $("#ad-content-slot");
   if (header) {
-    header.hidden = premium || !ads.headerKey;
+    header.hidden = !ads.headerKey;
     if (!header.hidden) header.innerHTML = adFrame(ads.headerKey, 728, 90);
   }
   if (content) {
-    content.hidden = premium || !ads.rectangleKey;
+    content.hidden = !ads.rectangleKey;
     if (!content.hidden) content.innerHTML = adFrame(ads.rectangleKey, 300, 250);
-  }
-}
-
-function loadPayPalSdk() {
-  return new Promise((resolve, reject) => {
-    if (window.paypal) return resolve();
-    const current = $("#paypal-sdk");
-    if (current) {
-      current.addEventListener("load", resolve, { once: true });
-      return;
-    }
-    const params = new URLSearchParams({
-      "client-id": RUNTIME_CONFIG.paypalClientId,
-      components: "buttons",
-      vault: "true",
-      intent: "subscription"
-    });
-    const script = document.createElement("script");
-    script.id = "paypal-sdk";
-    script.src = "https://www.paypal.com/sdk/js?" + params;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error("PayPal checkout could not load."));
-    document.head.append(script);
-  });
-}
-
-async function verifySubscription(subscriptionId) {
-  const session = await state.supabase.auth.getSession();
-  const token = session.data.session?.access_token;
-  if (!token) throw new Error("Log in again before verifying Premium.");
-  const response = await fetch(RUNTIME_CONFIG.supabaseUrl + "/functions/v1/paypal-subscription", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + token,
-      apikey: RUNTIME_CONFIG.supabasePublishableKey,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ action: "verify", subscriptionId })
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error || "Premium verification failed.");
-  return payload;
-}
-
-async function renderPremium() {
-  const root = $("#premium-content");
-  if (!root) return;
-  if (!state.user || !state.profile) {
-    root.innerHTML = "<p>Log in to manage Premium.</p>";
-    return;
-  }
-  if (state.profile.is_premium) {
-    root.innerHTML = '<div class="premium-status active"><strong>Premium active</strong><span>Ads are disabled for this account.</span></div><p>Manage the recurring subscription from your PayPal account.</p>';
-    renderAds();
-    return;
-  }
-  if (!RUNTIME_CONFIG.paypalClientId || !RUNTIME_CONFIG.paypalPlanId) {
-    root.innerHTML = "<p>Premium checkout is not configured in GitHub repository variables yet.</p>";
-    return;
-  }
-  root.innerHTML = '<div class="premium-status"><strong>AniWatch Premium</strong><span>' +
-    escapeHtml(RUNTIME_CONFIG.paypalCurrency || "USD") + " $" +
-    escapeHtml(RUNTIME_CONFIG.paypalPrice || "4.99") +
-    ' / month · ad-free account</span></div><div id="paypal-button-container"></div><p id="paypal-status" class="form-message"></p>';
-  try {
-    await loadPayPalSdk();
-    window.paypal.Buttons({
-      createSubscription(_data, actions) {
-        return actions.subscription.create({
-          plan_id: RUNTIME_CONFIG.paypalPlanId,
-          custom_id: state.user.id,
-          application_context: { brand_name: "AniWatch", user_action: "SUBSCRIBE_NOW" }
-        });
-      },
-      async onApprove(data) {
-        $("#paypal-status").textContent = "Verifying subscription…";
-        try {
-          const verified = await verifySubscription(data.subscriptionID);
-          await loadProfile();
-          fillProfileForm();
-          renderAds();
-          $("#paypal-status").textContent = verified.premium ? "Premium activated." : "Subscription approved; activation is pending.";
-          if (verified.premium) renderPremium();
-        } catch (error) {
-          $("#paypal-status").textContent = error.message;
-        }
-      },
-      onError(error) {
-        console.error(error);
-        $("#paypal-status").textContent = "PayPal checkout could not start.";
-      }
-    }).render("#paypal-button-container");
-  } catch (error) {
-    $("#paypal-status").textContent = error.message;
   }
 }
 
