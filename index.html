@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="./styles-fullstack.css" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <script defer src="./vendor/hls.min.js"></script>
-    <script type="module" src="./src/app.js?v=20260927-pages"></script>
+    <script type="module" src="./src/app.js?v=20260928-scramjet"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="./src/pages-app.js?v=20260927-pages2"></script>
   </head>
@@ -164,9 +164,23 @@
           <label
             >Consumet base URL <input id="consumet-url" type="url" required
           /></label>
+          <label class="proxy-setting">
+            <span>Scramjet proxy</span>
+            <span class="proxy-toggle">
+              <input id="scramjet-proxy-enabled" type="checkbox" />
+              Use proxy for API requests
+            </span>
+            <input
+              id="scramjet-proxy-url"
+              type="url"
+              placeholder="https://your-proxy.example/?url={url}"
+              autocomplete="off"
+            />
+          </label>
           <p>
             The public AniAPI and Consumet URLs are currently unavailable. Enter
-            a working instance URL to use those sources.
+            a working instance URL to use those sources. The optional Scramjet
+            proxy must accept the target API URL in a <code>{url}</code> placeholder.
           </p>
           <button type="submit">Save API URLs</button>
           <button type="button" id="reset-api-urls">Reset API URLs</button>
