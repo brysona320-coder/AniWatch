@@ -85,7 +85,7 @@ async function init() {
   const controller = new Controller({
     serviceworker: navigator.serviceWorker.controller,
     transport,
-    config: {
+    scramjetConfig: {
       prefix: "/~/sj/",
       scramjetPath: CDN.scramjet,
       injectPath: CDN.controllerInject,
