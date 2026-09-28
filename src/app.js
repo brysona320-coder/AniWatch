@@ -74,6 +74,7 @@ const elements = {
   proxyUrl: $("#scramjet-proxy-url"),
   wispUrl: $("#wisp-url"),
   wispPreset: $("#wisp-preset"),
+  apiPreset: $("#api-preset"),
   settingsMessage: $("#settings-message"),
   watchDialog: $("#watch-dialog"),
   watchClose: $("#watch-close"),
@@ -172,6 +173,48 @@ let hlsPlayer = null;
 function syncApiProxy() {
   setApiProxyTemplate(state.proxyEnabled ? state.proxyUrl : "");
   setScramjetProxy(state.proxyEnabled && !state.proxyUrl, state.wispUrl);
+}
+
+const API_PRESETS = {
+  animeparadise: { catalog: "animeparadise", stream: "animeparadise", animeparadiseUrl: ANIMEPARADISE_DEFAULT, consumetUrl: CONSUMET_DEFAULT },
+  anilist: { catalog: "anilist", stream: "animeparadise", animeparadiseUrl: ANIMEPARADISE_DEFAULT, consumetUrl: CONSUMET_DEFAULT },
+  consumet: { catalog: "animeparadise", stream: "animekai", animeparadiseUrl: ANIMEPARADISE_DEFAULT, consumetUrl: CONSUMET_DEFAULT },
+};
+
+function syncApiPreset() {
+  if (!elements.apiPreset) return;
+  const match = Object.entries(API_PRESETS).find(([, preset]) =>
+    state.catalogProvider === preset.catalog &&
+    state.streamProvider === preset.stream &&
+    state.animeparadiseUrl === preset.animeparadiseUrl &&
+    state.consumetUrl === preset.consumetUrl
+  );
+  elements.apiPreset.value = match?.[0] || "custom";
+}
+
+function applyApiPreset(name) {
+  const preset = API_PRESETS[name];
+  if (!preset) return;
+  state.catalogProvider = preset.catalog;
+  state.streamProvider = preset.stream;
+  state.animeparadiseUrl = preset.animeparadiseUrl;
+  state.consumetUrl = preset.consumetUrl;
+  elements.catalogProvider.value = state.catalogProvider;
+  elements.provider.value = state.streamProvider;
+  elements.watchProvider.value = state.streamProvider;
+  elements.animeparadiseUrl.value = state.animeparadiseUrl;
+  elements.consumetUrl.value = state.consumetUrl;
+  writeStorage(STORAGE.catalogProvider, state.catalogProvider);
+  writeStorage(STORAGE.streamProvider, state.streamProvider);
+  writeStorage(STORAGE.animeparadiseUrl, state.animeparadiseUrl);
+  writeStorage(STORAGE.consumetUrl, state.consumetUrl);
+  elements.settingsMessage.textContent = name === "animeparadise"
+    ? "AnimeParadise preset restored."
+    : name === "anilist"
+      ? "AniList preset restored."
+      : "Consumet preset restored.";
+  startCatalog();
+  if (elements.watchDialog.open) searchWatch();
 }
 
 const WISP_PRESETS = {
@@ -999,6 +1042,7 @@ elements.watchVideo.addEventListener("playing", () => {
 
 elements.provider.value = state.streamProvider;
 elements.catalogProvider.value = state.catalogProvider;
+syncApiPreset();
 elements.aniapiUrl.value = state.aniapiUrl;
 elements.consumetUrl.value = state.consumetUrl;
 elements.animeparadiseUrl.value = state.animeparadiseUrl;
@@ -1010,6 +1054,8 @@ setTheme(readStorage(STORAGE.theme, "dark") === "light" ? "light" : "dark");
 updateWatchlistControls();
 startCatalog();
 
+
+elements.apiPreset?.addEventListener("change", () => applyApiPreset(elements.apiPreset.value));
 
 elements.wispPreset?.addEventListener("change", () => {
   const preset = elements.wispPreset.value;
