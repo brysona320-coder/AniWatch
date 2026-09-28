@@ -73,6 +73,8 @@ const elements = {
   proxyUrl: $("#scramjet-proxy-url"),
   wispUrl: $("#wisp-url"),
   wispPreset: $("#wisp-preset"),
+  wispUrl: $("#wisp-url"),
+  wispPreset: $("#wisp-preset"),
   settingsMessage: $("#settings-message"),
   watchDialog: $("#watch-dialog"),
   watchClose: $("#watch-close"),
@@ -1007,6 +1009,7 @@ elements.animeparadiseUrl.value = state.animeparadiseUrl;
 elements.proxyEnabled.checked = state.proxyEnabled;
 elements.proxyUrl.value = state.proxyUrl;
 syncApiProxy();
+syncWispPreset();
 setTheme(readStorage(STORAGE.theme, "dark") === "light" ? "light" : "dark");
 updateWatchlistControls();
 startCatalog();
