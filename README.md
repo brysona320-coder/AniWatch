@@ -70,3 +70,14 @@ The Service Worker stores supported media in browser Cache Storage and tracks do
 ```sh
 npm test
 ```
+
+## Public API proxy across devices
+
+GitHub Pages cannot host a server-side proxy. `worker/proxy.js` is a Cloudflare Worker for the site's AnimeParadise-compatible catalog and episode JSON requests. It restricts routes to the requests the app uses; it does not proxy video streams or provide an API service by itself.
+
+1. In Cloudflare Workers, create a Worker and paste the contents of `worker/proxy.js`. Deploy it to a public `*.workers.dev` address (or a domain you control).
+2. Add a Worker environment variable named `UPSTREAM_ORIGIN` set to the HTTPS **origin** of an AnimeParadise-compatible API you operate or are authorized to proxy. Use an origin such as `https://api.example.com/`, without an extra path, query string, or credentials.
+3. Visit the Worker URL followed by `/search?q=test&limit=20`. It should return JSON; an unavailable upstream will return HTTP 502.
+4. On the AniWatch site, open **API settings**, set the **AnimeParadise API URL** to the Worker URL, and save. The setting is stored only in that browser, so repeat this on other devices. To make the proxy the default for all devices, update `ANIMEPARADISE_DEFAULT` in both `src/providers.js` and `src/streaming.js` after deployment and remove or migrate any saved browser overrides.
+
+A public hostname only solves addressability and browser CORS for the JSON API. It does not make an unavailable upstream work, remove upstream rate limits, or ensure video playback. The Worker permits the published Pages origin; CORS does not prevent non-browser clients from calling a public endpoint.
