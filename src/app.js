@@ -72,6 +72,7 @@ const elements = {
   animeparadiseUrl: $("#animeparadise-url"),
   proxyEnabled: $("#scramjet-proxy-enabled"),
   proxyUrl: $("#scramjet-proxy-url"),
+  proxyPreset: $("#proxy-preset"),
   wispUrl: $("#wisp-url"),
   wispPreset: $("#wisp-preset"),
   apiPreset: $("#api-preset"),
@@ -215,6 +216,24 @@ function applyApiPreset(name) {
       : "Consumet preset restored.";
   startCatalog();
   if (elements.watchDialog.open) searchWatch();
+}
+
+const PROXY_PRESETS = {
+  allorigins: "https://api.allorigins.win/raw?url={url}",
+  corsproxy: "https://corsproxy.io/?url={url}",
+};
+
+function syncProxyPreset() {
+  if (!elements.proxyPreset || !elements.proxyUrl) return;
+  if (!state.proxyUrl) {
+    elements.proxyPreset.value = "none";
+    elements.proxyUrl.value = "";
+    return;
+  }
+  elements.proxyPreset.value =
+    Object.entries(PROXY_PRESETS).find(([, url]) => url === state.proxyUrl)?.[0] ||
+    "custom";
+  elements.proxyUrl.value = state.proxyUrl;
 }
 
 const WISP_PRESETS = {
@@ -900,6 +919,7 @@ elements.resetUrls.addEventListener("click", () => {
   state.proxyUrl = "";
   elements.proxyEnabled.checked = false;
   elements.proxyUrl.value = "";
+  syncProxyPreset();
   state.wispUrl = WISP_PRESETS.anura;
   writeStorage(STORAGE.wispUrl, state.wispUrl);
   syncWispPreset();
@@ -1048,6 +1068,7 @@ elements.consumetUrl.value = state.consumetUrl;
 elements.animeparadiseUrl.value = state.animeparadiseUrl;
 elements.proxyEnabled.checked = state.proxyEnabled;
 elements.proxyUrl.value = state.proxyUrl;
+syncProxyPreset();
 syncApiProxy();
 syncWispPreset();
 setTheme(readStorage(STORAGE.theme, "dark") === "light" ? "light" : "dark");
@@ -1056,6 +1077,25 @@ startCatalog();
 
 
 elements.apiPreset?.addEventListener("change", () => applyApiPreset(elements.apiPreset.value));
+
+elements.proxyPreset?.addEventListener("change", () => {
+  const preset = elements.proxyPreset.value;
+  if (preset === "none") {
+    elements.proxyUrl.value = "";
+    return;
+  }
+  if (PROXY_PRESETS[preset]) {
+    elements.proxyUrl.value = PROXY_PRESETS[preset];
+  }
+});
+
+elements.proxyUrl?.addEventListener("input", () => {
+  const value = elements.proxyUrl.value.trim();
+  elements.proxyPreset.value = !value
+    ? "none"
+    : Object.entries(PROXY_PRESETS).find(([, url]) => url === value)?.[0] ||
+      "custom";
+});
 
 elements.wispPreset?.addEventListener("change", () => {
   const preset = elements.wispPreset.value;
