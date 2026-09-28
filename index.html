@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="./styles-fullstack.css" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <script defer src="./vendor/hls.min.js"></script>
-    <script type="module" src="./src/app.js?v=20260928-scramjet-wisp"></script>
+    <script type="module" src="./src/app.js?v=20260928-scramjet-wisp2"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="./src/pages-app.js?v=20260927-pages2"></script>
   </head>
@@ -173,7 +173,7 @@
             <input
               id="scramjet-proxy-url"
               type="url"
-              placeholder="https://your-proxy.example/?url={url}"
+              placeholder="Optional HTTP proxy: https://proxy.example/?url={url}"
               autocomplete="off"
             />
           </label>
@@ -190,12 +190,11 @@
               value="wss://anura.pro/"
               autocomplete="off"
             />
-            <small>Wisp WebSocket endpoint used by the Scramjet transport.</small>
+            <small>Scramjet uses this Wisp WebSocket when the proxy toggle is enabled and the HTTP proxy field is empty.</small>
           </label>
           <p>
             The public AniAPI and Consumet URLs are currently unavailable. Enter
-            a working instance URL to use those sources. The optional Scramjet
-            proxy must accept the target API URL in a <code>{url}</code> placeholder.
+            a working instance URL to use those sources. Scramjet can use the configured Wisp server directly. An HTTP proxy template is still supported if you enter one.
           </p>
           <button type="submit">Save API URLs</button>
           <button type="button" id="reset-api-urls">Reset API URLs</button>
