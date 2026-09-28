@@ -4,7 +4,11 @@ import {
   ANIMEPARADISE_DEFAULT,
   PROVIDERS,
 } from "./providers.js?v=20260925-6";
-import { validBaseUrl } from "./api.js?v=20260925-6";
+import {
+  validBaseUrl,
+  validProxyTemplate,
+  setApiProxyTemplate,
+} from "./api.js?v=20260928-scramjet";
 import {
   CONSUMET_DEFAULT,
   STREAM_PROVIDERS,
@@ -20,6 +24,8 @@ const STORAGE = {
   aniapiUrl: "aniwatch:aniapi-url",
   consumetUrl: "aniwatch:consumet-url",
   animeparadiseUrl: "aniwatch:animeparadise-url",
+  proxyEnabled: "aniwatch:scramjet-proxy-enabled",
+  proxyUrl: "aniwatch:scramjet-proxy-url",
   theme: "aniwatch:theme",
 };
 const $ = (selector) => document.querySelector(selector);
@@ -62,6 +68,8 @@ const elements = {
   aniapiUrl: $("#aniapi-url"),
   consumetUrl: $("#consumet-url"),
   animeparadiseUrl: $("#animeparadise-url"),
+  proxyEnabled: $("#scramjet-proxy-enabled"),
+  proxyUrl: $("#scramjet-proxy-url"),
   settingsMessage: $("#settings-message"),
   watchDialog: $("#watch-dialog"),
   watchClose: $("#watch-close"),
@@ -126,6 +134,8 @@ const state = {
     validBaseUrl(
       readStorage(STORAGE.animeparadiseUrl, ANIMEPARADISE_DEFAULT),
     ) || ANIMEPARADISE_DEFAULT,
+  proxyEnabled: Boolean(readStorage(STORAGE.proxyEnabled, false)),
+  proxyUrl: validProxyTemplate(readStorage(STORAGE.proxyUrl, "")) || "",
   query: "",
   type: "all",
   watchlist: false,
@@ -153,6 +163,10 @@ if (
 )
   state.streamProvider = "animeparadise";
 let hlsPlayer = null;
+
+function syncApiProxy() {
+  setApiProxyTemplate(state.proxyEnabled ? state.proxyUrl : "");
+}
 
 function streamBaseUrl() {
   return state.streamProvider === "animeparadise"
@@ -822,6 +836,12 @@ elements.resetUrls.addEventListener("click", () => {
   state.aniapiUrl = ANIAPI_DEFAULT;
   state.consumetUrl = CONSUMET_DEFAULT;
   state.animeparadiseUrl = ANIMEPARADISE_DEFAULT;
+  state.proxyEnabled = false;
+  state.proxyUrl = "";
+  elements.proxyEnabled.checked = false;
+  elements.proxyUrl.value = "";
+  writeStorage(STORAGE.proxyEnabled, false);
+  writeStorage(STORAGE.proxyUrl, "");
   elements.aniapiUrl.value = ANIAPI_DEFAULT;
   elements.consumetUrl.value = CONSUMET_DEFAULT;
   elements.animeparadiseUrl.value = ANIMEPARADISE_DEFAULT;
@@ -856,11 +876,24 @@ elements.settingsForm.addEventListener("submit", (event) => {
       state.consumetUrl !== consumetUrl);
   state.aniapiUrl = aniapiUrl;
   state.consumetUrl = consumetUrl;
+  const proxyUrl = validProxyTemplate(elements.proxyUrl.value.trim());
+  if (elements.proxyEnabled.checked && !proxyUrl) {
+    elements.settingsMessage.textContent =
+      "Enter a valid HTTPS proxy template containing {url}.";
+    return;
+  }
   state.animeparadiseUrl = animeparadiseUrl;
+  state.proxyEnabled = elements.proxyEnabled.checked;
+  state.proxyUrl = proxyUrl;
+  syncApiProxy();
   writeStorage(STORAGE.aniapiUrl, aniapiUrl);
   writeStorage(STORAGE.consumetUrl, consumetUrl);
   writeStorage(STORAGE.animeparadiseUrl, animeparadiseUrl);
-  elements.settingsMessage.textContent = "API URLs saved in this browser.";
+  writeStorage(STORAGE.proxyEnabled, state.proxyEnabled);
+  writeStorage(STORAGE.proxyUrl, state.proxyUrl);
+  elements.settingsMessage.textContent = state.proxyEnabled
+    ? "Scramjet proxy enabled for API requests."
+    : "API URLs saved in this browser. Direct API requests are enabled.";
   if (catalogChanged) startCatalog();
   if (streamChanged && elements.watchDialog.open) searchWatch();
 });
@@ -945,6 +978,9 @@ elements.catalogProvider.value = state.catalogProvider;
 elements.aniapiUrl.value = state.aniapiUrl;
 elements.consumetUrl.value = state.consumetUrl;
 elements.animeparadiseUrl.value = state.animeparadiseUrl;
+elements.proxyEnabled.checked = state.proxyEnabled;
+elements.proxyUrl.value = state.proxyUrl;
+syncApiProxy();
 setTheme(readStorage(STORAGE.theme, "dark") === "light" ? "light" : "dark");
 updateWatchlistControls();
 startCatalog();
