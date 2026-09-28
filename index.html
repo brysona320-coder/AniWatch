@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="./styles-fullstack.css" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <script defer src="./vendor/hls.min.js"></script>
-    <script type="module" src="./src/app.js?v=20260928-scramjet-wisp2"></script>
+    <script type="module" src="./src/app.js?v=20260928-proxy-presets1"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="./src/pages-app.js?v=20260927-pages2"></script>
   </head>
@@ -180,12 +180,19 @@
               <input id="scramjet-proxy-enabled" type="checkbox" />
               Use proxy for API requests
             </span>
+            <select id="proxy-preset">
+              <option value="none">Wisp / no HTTP proxy</option>
+              <option value="allorigins">AllOrigins — api.allorigins.win</option>
+              <option value="corsproxy">CorsProxy.io — corsproxy.io</option>
+              <option value="custom">Custom</option>
+            </select>
             <input
               id="scramjet-proxy-url"
               type="url"
               placeholder="Optional HTTP proxy: https://proxy.example/?url={url}"
               autocomplete="off"
             />
+            <small>Choose an HTTP proxy preset, or leave it on Wisp / no HTTP proxy to use the Wisp server below.</small>
           </label>
           <label class="proxy-setting">
             <span>Wisp server</span>
