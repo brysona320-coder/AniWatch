@@ -8,7 +8,8 @@ import {
   validBaseUrl,
   validProxyTemplate,
   setApiProxyTemplate,
-} from "./api.js?v=20260928-scramjet";
+  setScramjetProxy,
+} from "./api.js?v=20260928-scramjet-wisp2";
 import {
   CONSUMET_DEFAULT,
   STREAM_PROVIDERS,
@@ -172,6 +173,7 @@ let hlsPlayer = null;
 
 function syncApiProxy() {
   setApiProxyTemplate(state.proxyEnabled ? state.proxyUrl : "");
+  setScramjetProxy(state.proxyEnabled && !state.proxyUrl, state.wispUrl);
 }
 
 const WISP_PRESETS = {
@@ -902,11 +904,7 @@ elements.settingsForm.addEventListener("submit", (event) => {
     elements.settingsMessage.textContent = "Enter a valid Wisp WebSocket URL ending in /.";
     return;
   }
-  if (elements.proxyEnabled.checked && !proxyUrl) {
-    elements.settingsMessage.textContent =
-      "Enter a valid HTTPS proxy template containing {url}.";
-    return;
-  }
+
   state.animeparadiseUrl = animeparadiseUrl;
   state.proxyEnabled = elements.proxyEnabled.checked;
   state.proxyUrl = proxyUrl;
