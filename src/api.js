@@ -1,3 +1,5 @@
+import { fetchViaScramjet, setScramjetProxyConfig } from "./scramjet-proxy.js";
+
 export function validBaseUrl(value) {
   try {
     const url = new URL(value);
@@ -26,6 +28,10 @@ export function setApiProxyTemplate(value) {
   apiProxyTemplate = validProxyTemplate(value);
 }
 
+export function setScramjetProxy(enabled, wispUrl) {
+  setScramjetProxyConfig({ enabled, wispUrl });
+}
+
 export function validProxyTemplate(value) {
   if (!value) return "";
   try {
@@ -51,15 +57,24 @@ export async function fetchJson(baseUrl, path, signal, requestOptions = {}) {
   if (!base) throw new Error("Enter a valid HTTPS API URL in API settings.");
   let response;
   try {
-    response = await fetch(proxyTargetUrl(`${base}${path}`), {
-      ...requestOptions,
-      signal,
-      headers: { Accept: "application/json", ...requestOptions.headers },
-    });
+    const targetUrl = `${base}${path}`;
+    if (apiProxyTemplate) {
+      response = await fetch(proxyTargetUrl(targetUrl), {
+        ...requestOptions,
+        signal,
+        headers: { Accept: "application/json", ...requestOptions.headers },
+      });
+    } else {
+      response = await fetchViaScramjet(targetUrl, {
+        ...requestOptions,
+        signal,
+        headers: { Accept: "application/json", ...requestOptions.headers },
+      });
+    }
   } catch (error) {
     if (error.name === "AbortError") throw error;
     throw new Error(
-      apiProxyTemplate ? "Could not reach the configured Scramjet proxy. Check the proxy URL/template and its availability." : "Could not reach the API. Check its URL, availability, and CORS settings.",
+      apiProxyTemplate ? "Could not reach the configured HTTP proxy. Check its URL/template and availability." : "Could not reach the configured Scramjet/Wisp proxy. Check the Wisp endpoint and try again.",
     );
   }
   if (!response.ok) {
