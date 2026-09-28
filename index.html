@@ -154,6 +154,16 @@
           API settings <span>Configure streaming and catalog URLs</span>
         </summary>
         <form id="api-settings-form">
+          <label class="proxy-setting">
+            <span>API preset</span>
+            <select id="api-preset">
+              <option value="animeparadise">AnimeParadise</option>
+              <option value="anilist">AniList</option>
+              <option value="consumet">Consumet</option>
+              <option value="custom">Custom</option>
+            </select>
+            <small>Quickly restore the built-in AnimeParadise, AniList, or Consumet setup.</small>
+          </label>
           <label
             >AnimeParadise base URL
             <input id="animeparadise-url" type="url" required
