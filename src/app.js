@@ -26,6 +26,7 @@ const STORAGE = {
   animeparadiseUrl: "aniwatch:animeparadise-url",
   proxyEnabled: "aniwatch:scramjet-proxy-enabled",
   proxyUrl: "aniwatch:scramjet-proxy-url",
+  wispUrl: "aniwatch:wisp-url",
   theme: "aniwatch:theme",
 };
 const $ = (selector) => document.querySelector(selector);
@@ -70,6 +71,8 @@ const elements = {
   animeparadiseUrl: $("#animeparadise-url"),
   proxyEnabled: $("#scramjet-proxy-enabled"),
   proxyUrl: $("#scramjet-proxy-url"),
+  wispUrl: $("#wisp-url"),
+  wispPreset: $("#wisp-preset"),
   settingsMessage: $("#settings-message"),
   watchDialog: $("#watch-dialog"),
   watchClose: $("#watch-close"),
@@ -136,6 +139,7 @@ const state = {
     ) || ANIMEPARADISE_DEFAULT,
   proxyEnabled: Boolean(readStorage(STORAGE.proxyEnabled, false)),
   proxyUrl: validProxyTemplate(readStorage(STORAGE.proxyUrl, "")) || "",
+  wispUrl: readStorage(STORAGE.wispUrl, "wss://anura.pro/") || "wss://anura.pro/",
   query: "",
   type: "all",
   watchlist: false,
@@ -167,6 +171,17 @@ let hlsPlayer = null;
 function syncApiProxy() {
   setApiProxyTemplate(state.proxyEnabled ? state.proxyUrl : "");
 }
+
+const WISP_PRESETS = {
+  anura: "wss://anura.pro/",
+};
+
+function syncWispPreset() {
+  if (!elements.wispPreset || !elements.wispUrl) return;
+  elements.wispPreset.value = Object.entries(WISP_PRESETS).find(([, url]) => url === state.wispUrl)?.[0] || "custom";
+  elements.wispUrl.value = state.wispUrl;
+}
+
 
 function streamBaseUrl() {
   return state.streamProvider === "animeparadise"
@@ -840,6 +855,9 @@ elements.resetUrls.addEventListener("click", () => {
   state.proxyUrl = "";
   elements.proxyEnabled.checked = false;
   elements.proxyUrl.value = "";
+  state.wispUrl = WISP_PRESETS.anura;
+  writeStorage(STORAGE.wispUrl, state.wispUrl);
+  syncWispPreset();
   writeStorage(STORAGE.proxyEnabled, false);
   writeStorage(STORAGE.proxyUrl, "");
   elements.aniapiUrl.value = ANIAPI_DEFAULT;
@@ -877,6 +895,11 @@ elements.settingsForm.addEventListener("submit", (event) => {
   state.aniapiUrl = aniapiUrl;
   state.consumetUrl = consumetUrl;
   const proxyUrl = validProxyTemplate(elements.proxyUrl.value.trim());
+  const wispUrl = elements.wispUrl.value.trim();
+  if (wispUrl && !/^wss?:\/\/[^\s]+\/$/.test(wispUrl)) {
+    elements.settingsMessage.textContent = "Enter a valid Wisp WebSocket URL ending in /.";
+    return;
+  }
   if (elements.proxyEnabled.checked && !proxyUrl) {
     elements.settingsMessage.textContent =
       "Enter a valid HTTPS proxy template containing {url}.";
@@ -885,7 +908,10 @@ elements.settingsForm.addEventListener("submit", (event) => {
   state.animeparadiseUrl = animeparadiseUrl;
   state.proxyEnabled = elements.proxyEnabled.checked;
   state.proxyUrl = proxyUrl;
+  state.wispUrl = wispUrl || WISP_PRESETS.anura;
   syncApiProxy();
+  writeStorage(STORAGE.wispUrl, state.wispUrl);
+  syncWispPreset();
   writeStorage(STORAGE.aniapiUrl, aniapiUrl);
   writeStorage(STORAGE.consumetUrl, consumetUrl);
   writeStorage(STORAGE.animeparadiseUrl, animeparadiseUrl);
@@ -984,3 +1010,12 @@ syncApiProxy();
 setTheme(readStorage(STORAGE.theme, "dark") === "light" ? "light" : "dark");
 updateWatchlistControls();
 startCatalog();
+
+
+elements.wispPreset?.addEventListener("change", () => {
+  const preset = elements.wispPreset.value;
+  if (WISP_PRESETS[preset]) {
+    state.wispUrl = WISP_PRESETS[preset];
+    elements.wispUrl.value = state.wispUrl;
+  }
+});
