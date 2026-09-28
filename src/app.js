@@ -74,8 +74,6 @@ const elements = {
   proxyUrl: $("#scramjet-proxy-url"),
   wispUrl: $("#wisp-url"),
   wispPreset: $("#wisp-preset"),
-  wispUrl: $("#wisp-url"),
-  wispPreset: $("#wisp-preset"),
   settingsMessage: $("#settings-message"),
   watchDialog: $("#watch-dialog"),
   watchClose: $("#watch-close"),
