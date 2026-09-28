@@ -27,6 +27,8 @@ const STORAGE = {
   animeparadiseUrl: "aniwatch:animeparadise-url",
   proxyEnabled: "aniwatch:scramjet-proxy-enabled",
   proxyUrl: "aniwatch:scramjet-proxy-url",
+  proxyEngine: "aniwatch:proxy-engine",
+  terbiumServerUrl: "aniwatch:terbium-server-url",
   wispUrl: "aniwatch:wisp-url",
   theme: "aniwatch:theme",
 };
@@ -73,6 +75,9 @@ const elements = {
   proxyEnabled: $("#scramjet-proxy-enabled"),
   proxyUrl: $("#scramjet-proxy-url"),
   proxyPreset: $("#proxy-preset"),
+  proxyEngine: $("#proxy-engine"),
+  proxyEngineHelp: $("#proxy-engine-help"),
+  terbiumServerUrl: $("#terbium-server-url"),
   wispUrl: $("#wisp-url"),
   wispPreset: $("#wisp-preset"),
   apiPreset: $("#api-preset"),
@@ -142,6 +147,8 @@ const state = {
     ) || ANIMEPARADISE_DEFAULT,
   proxyEnabled: Boolean(readStorage(STORAGE.proxyEnabled, false)),
   proxyUrl: validProxyTemplate(readStorage(STORAGE.proxyUrl, "")) || "",
+  proxyEngine: readStorage(STORAGE.proxyEngine, "scramjet") === "terbium" ? "terbium" : "scramjet",
+  terbiumServerUrl: validBaseUrl(readStorage(STORAGE.terbiumServerUrl, "")) || "",
   wispUrl: readStorage(STORAGE.wispUrl, "wss://anura.pro/") || "wss://anura.pro/",
   query: "",
   type: "all",
@@ -171,9 +178,36 @@ if (
   state.streamProvider = "animeparadise";
 let hlsPlayer = null;
 
+function terbiumWispUrl(baseUrl) {
+  const base = validBaseUrl(baseUrl);
+  if (!base) return "";
+  const url = new URL(base);
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  url.pathname = `${url.pathname.replace(/\/$/, "")}/wisp/`;
+  url.search = "";
+  url.hash = "";
+  return url.href;
+}
+
+function syncProxyEngine() {
+  if (!elements.proxyEngine) return;
+  elements.proxyEngine.value = state.proxyEngine;
+  const terbium = state.proxyEngine === "terbium";
+  elements.terbiumServerUrl.hidden = !terbium;
+  elements.terbiumServerUrl.required = terbium && state.proxyEnabled && !state.proxyUrl;
+  elements.terbiumServerUrl.value = state.terbiumServerUrl;
+  elements.proxyEngineHelp.textContent = terbium
+    ? "Terbium v2 uses Scramjet + Wisp. Enter your Terbium server and AniWatch will use its /wisp/ endpoint."
+    : "Scramjet uses the Wisp endpoint configured below.";
+}
+
 function syncApiProxy() {
   setApiProxyTemplate(state.proxyEnabled ? state.proxyUrl : "");
-  setScramjetProxy(state.proxyEnabled && !state.proxyUrl, state.wispUrl);
+  const wispUrl =
+    state.proxyEngine === "terbium" && state.terbiumServerUrl
+      ? terbiumWispUrl(state.terbiumServerUrl)
+      : state.wispUrl;
+  setScramjetProxy(state.proxyEnabled && !state.proxyUrl, wispUrl);
 }
 
 const API_PRESETS = {
@@ -917,11 +951,19 @@ elements.resetUrls.addEventListener("click", () => {
   state.animeparadiseUrl = ANIMEPARADISE_DEFAULT;
   state.proxyEnabled = false;
   state.proxyUrl = "";
+  state.proxyEngine = "scramjet";
+  state.terbiumServerUrl = "";
   elements.proxyEnabled.checked = false;
   elements.proxyUrl.value = "";
+  writeStorage(STORAGE.proxyEngine, state.proxyEngine);
+  writeStorage(STORAGE.terbiumServerUrl, state.terbiumServerUrl);
   syncProxyPreset();
+  syncProxyEngine();
   state.wispUrl = WISP_PRESETS.anura;
   writeStorage(STORAGE.wispUrl, state.wispUrl);
+  writeStorage(STORAGE.proxyEngine, state.proxyEngine);
+  writeStorage(STORAGE.terbiumServerUrl, state.terbiumServerUrl);
+  syncProxyEngine();
   syncWispPreset();
   writeStorage(STORAGE.proxyEnabled, false);
   writeStorage(STORAGE.proxyUrl, "");
@@ -960,15 +1002,23 @@ elements.settingsForm.addEventListener("submit", (event) => {
   state.aniapiUrl = aniapiUrl;
   state.consumetUrl = consumetUrl;
   const proxyUrl = validProxyTemplate(elements.proxyUrl.value.trim());
+  const proxyEngine = elements.proxyEngine.value === "terbium" ? "terbium" : "scramjet";
+  const terbiumServerUrl = validBaseUrl(elements.terbiumServerUrl.value.trim());
   const wispUrl = elements.wispUrl.value.trim();
   if (wispUrl && !/^wss?:\/\/[^\s]+\/$/.test(wispUrl)) {
     elements.settingsMessage.textContent = "Enter a valid Wisp WebSocket URL ending in /.";
+    return;
+  }
+  if (proxyEngine === "terbium" && elements.proxyEnabled.checked && !proxyUrl && !terbiumServerUrl) {
+    elements.settingsMessage.textContent = "Enter a valid HTTPS Terbium server URL.";
     return;
   }
 
   state.animeparadiseUrl = animeparadiseUrl;
   state.proxyEnabled = elements.proxyEnabled.checked;
   state.proxyUrl = proxyUrl;
+  state.proxyEngine = proxyEngine;
+  state.terbiumServerUrl = terbiumServerUrl;
   state.wispUrl = wispUrl || WISP_PRESETS.anura;
   syncApiProxy();
   writeStorage(STORAGE.wispUrl, state.wispUrl);
@@ -979,7 +1029,9 @@ elements.settingsForm.addEventListener("submit", (event) => {
   writeStorage(STORAGE.proxyEnabled, state.proxyEnabled);
   writeStorage(STORAGE.proxyUrl, state.proxyUrl);
   elements.settingsMessage.textContent = state.proxyEnabled
-    ? "Scramjet proxy enabled for API requests."
+    ? state.proxyEngine === "terbium"
+      ? "Terbium v2 proxy mode enabled for API requests."
+      : "Scramjet proxy enabled for API requests."
     : "API URLs saved in this browser. Direct API requests are enabled.";
   if (catalogChanged) startCatalog();
   if (streamChanged && elements.watchDialog.open) searchWatch();
@@ -1069,6 +1121,7 @@ elements.animeparadiseUrl.value = state.animeparadiseUrl;
 elements.proxyEnabled.checked = state.proxyEnabled;
 elements.proxyUrl.value = state.proxyUrl;
 syncProxyPreset();
+syncProxyEngine();
 syncApiProxy();
 syncWispPreset();
 setTheme(readStorage(STORAGE.theme, "dark") === "light" ? "light" : "dark");
@@ -1077,6 +1130,31 @@ startCatalog();
 
 
 elements.apiPreset?.addEventListener("change", () => applyApiPreset(elements.apiPreset.value));
+
+elements.proxyEngine?.addEventListener("change", () => {
+  state.proxyEngine = elements.proxyEngine.value === "terbium" ? "terbium" : "scramjet";
+  syncProxyEngine();
+  if (state.proxyEngine === "terbium" && state.terbiumServerUrl) {
+    const derived = terbiumWispUrl(state.terbiumServerUrl);
+    if (derived) {
+      state.wispUrl = derived;
+      elements.wispUrl.value = derived;
+      syncWispPreset();
+    }
+  }
+});
+
+elements.terbiumServerUrl?.addEventListener("input", () => {
+  const base = validBaseUrl(elements.terbiumServerUrl.value.trim());
+  if (!base) return;
+  state.terbiumServerUrl = base;
+  const derived = terbiumWispUrl(base);
+  if (derived) {
+    state.wispUrl = derived;
+    elements.wispUrl.value = derived;
+    syncWispPreset();
+  }
+});
 
 elements.proxyPreset?.addEventListener("change", () => {
   const preset = elements.proxyPreset.value;

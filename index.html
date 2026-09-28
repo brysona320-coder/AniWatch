@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="./styles-fullstack.css" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <script defer src="./vendor/hls.min.js"></script>
-    <script type="module" src="./src/app.js?v=20260928-proxy-presets1"></script>
+    <script type="module" src="./src/app.js?v=20260928-terbium-proxy1"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="./src/pages-app.js?v=20260927-pages2"></script>
   </head>
@@ -175,11 +175,23 @@
             >Consumet base URL <input id="consumet-url" type="url" required
           /></label>
           <label class="proxy-setting">
-            <span>Scramjet proxy</span>
+            <span>Proxy engine</span>
             <span class="proxy-toggle">
               <input id="scramjet-proxy-enabled" type="checkbox" />
               Use proxy for API requests
             </span>
+            <select id="proxy-engine">
+              <option value="scramjet">Scramjet + Wisp</option>
+              <option value="terbium">Terbium v2 (Scramjet/Wisp)</option>
+            </select>
+            <input
+              id="terbium-server-url"
+              type="url"
+              placeholder="Terbium server: https://proxy.example.com/"
+              autocomplete="off"
+              hidden
+            />
+            <small id="proxy-engine-help">Scramjet uses the Wisp endpoint configured below.</small>
             <select id="proxy-preset">
               <option value="none">Wisp / no HTTP proxy</option>
               <option value="allorigins">AllOrigins — api.allorigins.win</option>
@@ -207,11 +219,11 @@
               value="wss://anura.pro/"
               autocomplete="off"
             />
-            <small>Scramjet uses this Wisp WebSocket when the proxy toggle is enabled and the HTTP proxy field is empty.</small>
+            <small>Scramjet and Terbium v2 use this Wisp WebSocket when the proxy toggle is enabled and the HTTP proxy field is empty.</small>
           </label>
           <p>
             The public AniAPI and Consumet URLs are currently unavailable. Enter
-            a working instance URL to use those sources. Scramjet can use the configured Wisp server directly. An HTTP proxy template is still supported if you enter one.
+            a working instance URL to use those sources. Scramjet can use the configured Wisp server directly. Terbium v2 compatibility derives a /wisp/ endpoint from your Terbium server URL. An HTTP proxy template is still supported if you enter one.
           </p>
           <button type="submit">Save API URLs</button>
           <button type="button" id="reset-api-urls">Reset API URLs</button>
