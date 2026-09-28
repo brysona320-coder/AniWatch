@@ -177,6 +177,21 @@
               autocomplete="off"
             />
           </label>
+          <label class="proxy-setting">
+            <span>Wisp server</span>
+            <select id="wisp-preset">
+              <option value="anura">Anura — wss://anura.pro/</option>
+              <option value="custom">Custom</option>
+            </select>
+            <input
+              id="wisp-url"
+              type="url"
+              placeholder="wss://example.com/wisp/"
+              value="wss://anura.pro/"
+              autocomplete="off"
+            />
+            <small>Wisp WebSocket endpoint used by the Scramjet transport.</small>
+          </label>
           <p>
             The public AniAPI and Consumet URLs are currently unavailable. Enter
             a working instance URL to use those sources. The optional Scramjet
