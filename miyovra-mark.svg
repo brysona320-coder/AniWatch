@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>Miyovra mark</title>
+  <defs>
+    <linearGradient id="g" x1="12" y1="10" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d5c2ff"/>
+      <stop offset="1" stop-color="#8b5ceb"/>
+    </linearGradient>
+  </defs>
+  <rect x="7.5" y="7.5" width="49" height="49" rx="16" fill="#171827" stroke="url(#g)" stroke-width="3"/>
+  <path d="M18.5 42V23.5L32 35l13.5-11.5V42" fill="none" stroke="url(#g)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m32 16.5 2.1 4.1 4.1 2.1-4.1 2.1-2.1 4.1-2.1-4.1-4.1-2.1 4.1-2.1 2.1-4.1Z" fill="#fff"/>
+</svg>
