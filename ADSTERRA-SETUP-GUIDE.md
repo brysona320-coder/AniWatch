@@ -1,4 +1,4 @@
-# Ads on AniWatch
+# Ads on Miyovra
 
 Your publisher website entry is:
 
@@ -6,7 +6,7 @@ Your publisher website entry is:
 6081873 — brysona320-coder.github.io
 ```
 
-The number `6081873` is the website entry/site ID. It is **not** something AniWatch needs to paste into JavaScript by itself.
+The number `6081873` is the website entry/site ID. It is **not** something Miyovra needs to paste into JavaScript by itself.
 
 The ad code you supplied is:
 
@@ -14,7 +14,7 @@ The ad code you supplied is:
 <script src="https://pl31543304.profitableratecpmnetwork.com/e7/8d/82/e78d820541c26ca920191a7d24b6e49d.js"></script>
 ```
 
-AniWatch now includes that exact script in `index.html`.
+Miyovra now includes that exact script in `index.html`.
 
 ## What “0 ad unit(s)” means
 
