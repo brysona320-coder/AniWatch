@@ -74,7 +74,7 @@ function injectUi() {
       '<dialog id="account-dialog" class="account-dialog" aria-labelledby="account-title">',
       '<button type="button" class="dialog-close" id="account-close" aria-label="Close account">×</button>',
       '<div class="account-shell"><aside class="account-nav">',
-      '<h2 id="account-title">AniWatch account</h2>',
+      '<h2 id="account-title">Miyovra account</h2>',
       '<button type="button" data-page="profile">Profile</button>',
       '<button type="button" data-page="appearance">Appearance</button>',
       '<button type="button" data-page="player">Player</button>',
@@ -718,7 +718,7 @@ async function showPublicList() {
   $("#account-view").hidden = false;
   $(".account-content").innerHTML =
     "<section><h3>" + escapeHtml(listResult.data.name) + "</h3><p>Shared by " +
-    escapeHtml(ownerResult.data?.display_name || "AniWatch user") +
+    escapeHtml(ownerResult.data?.display_name || "Miyovra user") +
     '</p><div class="public-list-grid">' +
     ((itemsResult.data || []).map((item) => "<article><strong>" + escapeHtml(item.title) + "</strong></article>").join("") || "<p>This list is empty.</p>") +
     "</div></section>";
@@ -745,5 +745,5 @@ async function init() {
 
 init().catch((error) => {
   console.error(error);
-  notify("AniWatch account features could not start.", true);
+  notify("Miyovra account features could not start.", true);
 });
