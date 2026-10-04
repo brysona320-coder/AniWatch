@@ -1,10 +1,17 @@
 {
-  "name": "AniWatch",
-  "short_name": "AniWatch",
-  "description": "Browse, watch, sync and save anime for offline playback.",
+  "name": "Miyovra",
+  "short_name": "Miyovra",
+  "description": "Browse, watch, sync and save anime with Miyovra.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#10111b",
   "theme_color": "#8b5cf6",
-  "icons": []
+  "icons": [
+    {
+      "src": "./miyovra-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
