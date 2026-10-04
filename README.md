@@ -1,12 +1,12 @@
-# AniWatch — GitHub Pages Edition
+# Miyovra — GitHub Pages Edition
 
-AniWatch is a static anime frontend hosted on **GitHub Pages**.
+Miyovra is a static anime frontend hosted on **GitHub Pages**.
 
 Features include email/password accounts through Supabase, profile avatars, Continue Watching sync, public/private lists, player customization, and browser offline downloads.
 
 ## Monetization
 
-AniWatch is **ads-only**. There is no PayPal integration, Premium tier, subscription billing, or paid membership code.
+Miyovra is **ads-only**. There is no PayPal integration, Premium tier, subscription billing, or paid membership code.
 
 The active publisher script is included directly in `index.html`:
 
@@ -29,7 +29,7 @@ The workflow in `.github/workflows/pages.yml` deploys pushes to `main`.
 Expected site URL:
 
 ```
-https://brysona320-coder.github.io/AniWatch/
+https://brysona320-coder.github.io/Miyovra/
 ```
 
 ## Supabase accounts and sync
@@ -56,7 +56,7 @@ SUPABASE_PUBLISHABLE_KEY
 Add this URL to the allowed Supabase Auth site/redirect URLs:
 
 ```
-https://brysona320-coder.github.io/AniWatch/
+https://brysona320-coder.github.io/Miyovra/
 ```
 
 The publishable key is a browser-facing key. Never expose a Supabase service-role/secret key on GitHub Pages.
