@@ -64,7 +64,7 @@ export function setScramjetProxyConfig(next = {}) {
 
 async function init() {
   if (!config.enabled) throw new Error("Scramjet proxy is disabled.");
-  if (!/^wss?:\\/\\//.test(config.wispUrl) || !config.wispUrl.endsWith("/")) {
+  if (!/^wss?:\/\//.test(config.wispUrl) || !config.wispUrl.endsWith("/")) {
     throw new Error("Enter a valid Wisp WebSocket URL ending in /.");
   }
 
